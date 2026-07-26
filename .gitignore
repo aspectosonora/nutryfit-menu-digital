@@ -1,0 +1,9 @@
+.vercel/
+node_modules/
+
+# Archivos fuente y materiales de revisión no usados por el sitio
+IMAGENES/
+Nutryfit Logo.ai
+Nutryfit Logo.png
+Nutryfit Logo.svg
+VISTA-MOVIL.png
