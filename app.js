@@ -1239,6 +1239,44 @@
   }
 
   function bindEvents() {
+    $$('[data-plan-tab]').forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const targetId = tab.dataset.planTab;
+        $$('[data-plan-tab]').forEach((item) => {
+          const isActive = item === tab;
+          item.classList.toggle("active", isActive);
+          item.setAttribute("aria-selected", String(isActive));
+        });
+        $$(".plan-period-panel").forEach((panel) => {
+          const isActive = panel.id === targetId;
+          panel.hidden = !isActive;
+          panel.classList.toggle("active", isActive);
+        });
+        window.requestAnimationFrame(() => {
+          $(`#${targetId}`).scrollIntoView({ behavior: "smooth", block: "nearest" });
+        });
+      });
+    });
+
+    $$(".plan-hire").forEach((button) => {
+      button.addEventListener("click", () => {
+        const price = formatMoney(Number(button.dataset.price));
+        const message = [
+          "🍏 *QUIERO CONTRATAR UN PLAN NUTRYFIT*",
+          "",
+          `*Duración:* Plan ${button.dataset.period}`,
+          `*Paquete:* ${button.dataset.plan}`,
+          `*Precio publicado:* ${price}`,
+          "",
+          "Quiero confirmar disponibilidad, fecha de inicio y detalles del plan.",
+        ].join("\n");
+        const url = `https://wa.me/${data.business.whatsapp}?text=${encodeURIComponent(message)}`;
+        document.documentElement.dataset.lastPlanWhatsappMessage = message;
+        document.documentElement.dataset.lastPlanWhatsappUrl = url;
+        window.open(url, "_blank", "noopener");
+      });
+    });
+
     $$(".app-tabs a").forEach((link) => {
       link.addEventListener("click", () => {
         $$(".app-tabs a").forEach((item) => item.classList.remove("active"));

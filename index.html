@@ -162,6 +162,226 @@
         </div>
       </section>
 
+      <section class="section plans-section" id="planes" aria-labelledby="plansTitle">
+        <div class="plans-heading">
+          <p class="eyebrow">TU SEMANA, RESUELTA</p>
+          <h2 id="plansTitle">Planes de comida saludable</h2>
+          <p>Comidas listas de lunes a viernes. Elige la duración, revisa los paquetes y contrata directamente con Nutryfit.</p>
+        </div>
+
+        <div class="plan-period-tabs" role="tablist" aria-label="Duración del plan">
+          <button
+            class="plan-period-card active"
+            id="weeklyPlanTab"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="weeklyPlans"
+            data-plan-tab="weeklyPlans"
+          >
+            <img src="./assets/plan-semanal.webp" alt="Comida saludable Nutryfit lista para la semana" loading="lazy" />
+            <span class="plan-period-shade"></span>
+            <span class="plan-period-copy">
+              <small>Desde $780</small>
+              <strong>Semanal</strong>
+              <span>Lunes a viernes</span>
+            </span>
+            <span class="plan-period-action">Ver paquetes <i data-lucide="arrow-down" aria-hidden="true"></i></span>
+          </button>
+
+          <button
+            class="plan-period-card"
+            id="monthlyPlanTab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="monthlyPlans"
+            data-plan-tab="monthlyPlans"
+          >
+            <img src="./assets/plan-mensual.webp" alt="Poke saludable de Nutryfit para un plan mensual" loading="lazy" />
+            <span class="plan-period-shade"></span>
+            <span class="plan-period-copy">
+              <small>Desde $2,700</small>
+              <strong>Mensual</strong>
+              <span>4 semanas</span>
+            </span>
+            <span class="plan-period-action">Ver paquetes <i data-lucide="arrow-down" aria-hidden="true"></i></span>
+          </button>
+        </div>
+
+        <div class="plan-period-panel active" id="weeklyPlans" role="tabpanel" aria-labelledby="weeklyPlanTab">
+          <div class="plan-panel-heading">
+            <div>
+              <span class="plan-number">01</span>
+              <div>
+                <p class="eyebrow">PLAN SEMANAL</p>
+                <h3>Elige tu semana</h3>
+              </div>
+            </div>
+            <span class="weekday-pill">Lun–Vie</span>
+          </div>
+
+          <div class="plan-packages">
+            <details class="plan-package" open>
+              <summary>
+                <span><small>5 días de comida</small><strong>Básico</strong></span>
+                <b>Desde $780</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Ingredientes frescos y balanceados.</li>
+                  <li>Listo para disfrutar, sin preocuparte por cocinar.</li>
+                  <li>Una opción práctica para mantenerte en tu mejor versión.</li>
+                </ul>
+                <div class="plan-options">
+                  <div><span><strong>Básico</strong><small>Tamaño convencional</small></span><b>$780</b><button class="plan-hire" type="button" data-period="semanal" data-plan="Básico" data-price="780">Contratar</button></div>
+                  <div><span><strong>Básico Gde.</strong><small>Tamaño grande</small></span><b>$980</b><button class="plan-hire" type="button" data-period="semanal" data-plan="Básico Grande" data-price="980">Contratar</button></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>5 días · comida y cena</small><strong>Standard</strong></span>
+                <b>Desde $1,280</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Ingredientes frescos y balanceados.</li>
+                  <li>Comida y cena listas, sin preocuparte por cocinar.</li>
+                  <li>Una opción completa para mañana y tarde.</li>
+                </ul>
+                <div class="plan-options">
+                  <div><span><strong>Standard</strong><small>Tamaño convencional</small></span><b>$1,280</b><button class="plan-hire" type="button" data-period="semanal" data-plan="Standard" data-price="1280">Contratar</button></div>
+                  <div><span><strong>Standard Gde.</strong><small>Tamaño grande</small></span><b>$1,580</b><button class="plan-hire" type="button" data-period="semanal" data-plan="Standard Grande" data-price="1580">Contratar</button></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>2 semanas · comida</small><strong>Premium</strong></span>
+                <b>$1,850</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Comidas en tamaño convencional.</li>
+                  <li>Ingredientes frescos, balanceados y listos para disfrutar.</li>
+                  <li>Incluye 1 consulta de nutrición.</li>
+                </ul>
+                <button class="plan-hire plan-hire-wide" type="button" data-period="semanal" data-plan="Premium" data-price="1850">Contratar Premium · $1,850</button>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>2 semanas · comida y cena</small><strong>Premium Plus</strong></span>
+                <b>$3,000</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Comida y cena en tamaño convencional.</li>
+                  <li>Ingredientes frescos, balanceados y listos para disfrutar.</li>
+                  <li>Incluye 1 consulta de nutrición.</li>
+                </ul>
+                <button class="plan-hire plan-hire-wide" type="button" data-period="semanal" data-plan="Premium Plus" data-price="3000">Contratar Premium Plus · $3,000</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <div class="plan-period-panel" id="monthlyPlans" role="tabpanel" aria-labelledby="monthlyPlanTab" hidden>
+          <div class="plan-panel-heading">
+            <div>
+              <span class="plan-number">02</span>
+              <div>
+                <p class="eyebrow">PLAN MENSUAL</p>
+                <h3>Planea 4 semanas</h3>
+              </div>
+            </div>
+            <span class="weekday-pill">Lun–Vie</span>
+          </div>
+
+          <div class="plan-packages">
+            <details class="plan-package" open>
+              <summary>
+                <span><small>4 semanas de comida</small><strong>Básico</strong></span>
+                <b>Desde $2,700</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Ingredientes frescos y balanceados.</li>
+                  <li>Listo para disfrutar, sin preocuparte por cocinar.</li>
+                  <li>Una opción práctica para mantenerte en tu mejor versión.</li>
+                </ul>
+                <div class="plan-options">
+                  <div><span><strong>Básico</strong><small>Tamaño convencional</small></span><b>$2,700</b><button class="plan-hire" type="button" data-period="mensual" data-plan="Básico" data-price="2700">Contratar</button></div>
+                  <div><span><strong>Básico Gde.</strong><small>Tamaño grande</small></span><b>$3,500</b><button class="plan-hire" type="button" data-period="mensual" data-plan="Básico Grande" data-price="3500">Contratar</button></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>4 semanas · comida y cena</small><strong>Standard</strong></span>
+                <b>Desde $4,700</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Ingredientes frescos y balanceados.</li>
+                  <li>Comida y cena listas, sin preocuparte por cocinar.</li>
+                  <li>Una opción completa para mañana y tarde.</li>
+                </ul>
+                <div class="plan-options">
+                  <div><span><strong>Standard</strong><small>Tamaño convencional</small></span><b>$4,700</b><button class="plan-hire" type="button" data-period="mensual" data-plan="Standard" data-price="4700">Contratar</button></div>
+                  <div><span><strong>Standard Gde.</strong><small>Tamaño grande</small></span><b>$5,400</b><button class="plan-hire" type="button" data-period="mensual" data-plan="Standard Grande" data-price="5400">Contratar</button></div>
+                </div>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>4 semanas · comida</small><strong>Premium</strong></span>
+                <b>$3,500</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Comidas en tamaño convencional.</li>
+                  <li>Ingredientes frescos, balanceados y listos para disfrutar.</li>
+                  <li>Incluye 2 consultas de nutrición.</li>
+                </ul>
+                <button class="plan-hire plan-hire-wide" type="button" data-period="mensual" data-plan="Premium" data-price="3500">Contratar Premium · $3,500</button>
+              </div>
+            </details>
+
+            <details class="plan-package">
+              <summary>
+                <span><small>4 semanas · comida y cena</small><strong>Premium Plus</strong></span>
+                <b>$5,500</b>
+                <i data-lucide="chevron-down" aria-hidden="true"></i>
+              </summary>
+              <div class="plan-package-body">
+                <ul>
+                  <li>Comida y cena en tamaño convencional.</li>
+                  <li>Ingredientes frescos, balanceados y listos para disfrutar.</li>
+                  <li>Incluye 2 consultas de nutrición.</li>
+                </ul>
+                <button class="plan-hire plan-hire-wide" type="button" data-period="mensual" data-plan="Premium Plus" data-price="5500">Contratar Premium Plus · $5,500</button>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <p class="plans-note"><i data-lucide="message-circle" aria-hidden="true"></i> El inicio, la disponibilidad y los detalles de tu plan se confirman por WhatsApp.</p>
+      </section>
+
       <section class="section menu-section" id="menu" aria-labelledby="menuTitle">
         <div class="section-heading menu-heading">
           <div>
