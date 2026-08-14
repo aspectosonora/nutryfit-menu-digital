@@ -19,6 +19,209 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* =========================================================
+   NUTRYFIT v10 — desglose completo de planes
+   ========================================================= */
+
+.plan-schedule-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin-bottom: 16px;
+  padding: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 17px;
+  background: rgba(0, 36, 25, 0.34);
+}
+
+.plan-schedule-tab {
+  display: grid;
+  min-width: 0;
+  min-height: 50px;
+  place-content: center;
+  gap: 2px;
+  padding: 8px 9px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.68);
+  cursor: pointer;
+  text-align: center;
+}
+
+.plan-schedule-tab strong,
+.plan-schedule-tab small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-schedule-tab strong {
+  font-family: "Archivo Black", sans-serif;
+  font-size: 0.77rem;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+
+.plan-schedule-tab small {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.plan-schedule-tab.active {
+  background: #d88317;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+}
+
+.plan-schedule-tab:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+@media (max-width: 440px) {
+  .plans-section .weekday-pill {
+    display: none;
+  }
+}
+
+.plan-schedule-panel[hidden] {
+  display: none;
+}
+
+.plan-schedule-intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 2px 10px;
+  color: #fff;
+}
+
+.plan-schedule-intro span {
+  flex: 0 0 auto;
+  font-family: "Archivo Black", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+.plan-schedule-intro small {
+  max-width: 210px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.6rem;
+  line-height: 1.35;
+  text-align: right;
+}
+
+.plans-section .plan-package-body {
+  padding-top: 11px;
+}
+
+.plans-section .plan-options {
+  gap: 9px;
+}
+
+.plans-section .plan-options > .plan-option-card {
+  display: grid;
+  gap: 9px;
+  padding: 11px;
+  border: 1px solid #dfe6cc;
+  border-radius: 14px;
+  background: #f2f5e6;
+}
+
+.plan-option-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plan-option-top span {
+  min-width: 0;
+}
+
+.plans-section .plan-option-top strong,
+.plans-section .plan-option-top small {
+  display: block;
+}
+
+.plans-section .plan-option-top strong {
+  color: var(--nf-ink);
+  font-size: 0.72rem;
+}
+
+.plans-section .plan-option-top small {
+  margin-top: 2px;
+  color: var(--nf-muted);
+  font-size: 0.59rem;
+}
+
+.plan-option-top > b {
+  flex: 0 0 auto;
+  color: var(--nf-pine);
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.96rem;
+}
+
+.plan-option-details {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding: 9px 8px 9px 22px;
+  border-radius: 10px;
+  background: #fff;
+  color: #526259;
+  font-size: 0.63rem;
+  line-height: 1.45;
+}
+
+.plan-option-details li::marker {
+  color: #78a848;
+}
+
+.plans-section .plan-option-card .plan-hire {
+  width: 100%;
+  min-height: 43px;
+  font-size: 0.69rem;
+}
+
+@media (max-width: 370px) {
+  .plan-schedule-tab small {
+    font-size: 0.53rem;
+  }
+
+  .plan-schedule-intro {
+    display: grid;
+    gap: 3px;
+  }
+
+  .plan-schedule-intro small {
+    text-align: left;
+  }
+}
+
+@media (min-width: 680px) {
+  .plan-schedule-tabs {
+    max-width: 430px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  .plans-section .plan-options > .plan-option-card {
+    padding: 14px;
+  }
+
+  .plan-option-details {
+    font-size: 0.68rem;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

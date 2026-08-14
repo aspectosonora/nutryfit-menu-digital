@@ -2,6 +2,7 @@
   "use strict";
 
   const data = window.NUTRYFIT_DATA;
+  const mealPlans = window.NUTRYFIT_PLANS;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const formatMoney = (value) =>
@@ -74,6 +75,119 @@
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function renderPlanOption(option, schedule) {
+    const includes = option.details.join(" ");
+    return `
+      <article class="plan-option-card">
+        <div class="plan-option-top">
+          <span>
+            <strong>${escapeHtml(option.name)}</strong>
+            <small>${escapeHtml(option.size)}</small>
+          </span>
+          <b>${formatMoney(option.price)}</b>
+        </div>
+        <ul class="plan-option-details">
+          ${option.details.map((detail) => `<li>${escapeHtml(detail)}</li>`).join("")}
+        </ul>
+        <button
+          class="plan-hire"
+          type="button"
+          data-period="${escapeHtml(option.duration)}"
+          data-schedule="${escapeHtml(schedule.label)}"
+          data-plan="${escapeHtml(option.name)}"
+          data-size="${escapeHtml(option.size)}"
+          data-includes="${escapeHtml(includes)}"
+          data-price="${option.price}"
+        >
+          Contratar este plan
+        </button>
+      </article>
+    `;
+  }
+
+  function renderPlanPackage(planPackage, schedule, index) {
+    const lowestPrice = Math.min(...planPackage.options.map((option) => option.price));
+    const priceLabel = planPackage.options.length > 1 ? `Desde ${formatMoney(lowestPrice)}` : formatMoney(lowestPrice);
+    return `
+      <details class="plan-package"${index === 0 ? " open" : ""}>
+        <summary>
+          <span>
+            <small>${escapeHtml(planPackage.subtitle)}</small>
+            <strong>${escapeHtml(planPackage.name)}</strong>
+          </span>
+          <b>${priceLabel}</b>
+          <i data-lucide="chevron-down" aria-hidden="true"></i>
+        </summary>
+        <div class="plan-package-body">
+          <div class="plan-options">
+            ${planPackage.options.map((option) => renderPlanOption(option, schedule)).join("")}
+          </div>
+        </div>
+      </details>
+    `;
+  }
+
+  function renderMealPlans() {
+    if (!mealPlans) return;
+
+    Object.entries(mealPlans).forEach(([panelId, period]) => {
+      const panel = $(`#${panelId}`);
+      if (!panel) return;
+
+      panel.innerHTML = `
+        <div class="plan-panel-heading">
+          <div>
+            <span class="plan-number">${escapeHtml(period.number)}</span>
+            <div>
+              <p class="eyebrow">${escapeHtml(period.eyebrow)}</p>
+              <h3>${escapeHtml(period.title)}</h3>
+            </div>
+          </div>
+          <span class="weekday-pill">2 opciones</span>
+        </div>
+        <div class="plan-schedule-tabs" role="tablist" aria-label="Días incluidos">
+          ${period.schedules
+            .map(
+              (schedule, index) => `
+                <button
+                  class="plan-schedule-tab${index === 0 ? " active" : ""}"
+                  type="button"
+                  role="tab"
+                  aria-selected="${index === 0}"
+                  aria-controls="${escapeHtml(schedule.id)}"
+                  data-plan-schedule="${escapeHtml(schedule.id)}"
+                >
+                  <strong>${escapeHtml(schedule.shortLabel)}</strong>
+                  <small>${escapeHtml(schedule.note)}</small>
+                </button>
+              `,
+            )
+            .join("")}
+        </div>
+        ${period.schedules
+          .map(
+            (schedule, index) => `
+              <section
+                class="plan-schedule-panel"
+                id="${escapeHtml(schedule.id)}"
+                role="tabpanel"
+                ${index === 0 ? "" : "hidden"}
+              >
+                <div class="plan-schedule-intro">
+                  <span>${escapeHtml(schedule.label)}</span>
+                  <small>Toca un paquete para revisar todo lo que incluye.</small>
+                </div>
+                <div class="plan-packages">
+                  ${schedule.packages.map((planPackage, packageIndex) => renderPlanPackage(planPackage, schedule, packageIndex)).join("")}
+                </div>
+              </section>
+            `,
+          )
+          .join("")}
+      `;
+    });
   }
 
   function loadCart() {
@@ -1268,15 +1382,39 @@
       });
     });
 
+    $$('[data-plan-schedule]').forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const periodPanel = tab.closest(".plan-period-panel");
+        const targetPanel = $(`#${tab.dataset.planSchedule}`, periodPanel);
+        if (!targetPanel || tab.getAttribute("aria-selected") === "true") return;
+
+        $$('[data-plan-schedule]', periodPanel).forEach((item) => {
+          item.classList.remove("active");
+          item.setAttribute("aria-selected", "false");
+        });
+        $$(".plan-schedule-panel", periodPanel).forEach((panel) => {
+          panel.hidden = true;
+        });
+
+        tab.classList.add("active");
+        tab.setAttribute("aria-selected", "true");
+        targetPanel.hidden = false;
+        refreshIcons();
+      });
+    });
+
     $$(".plan-hire").forEach((button) => {
       button.addEventListener("click", () => {
         const price = formatMoney(Number(button.dataset.price));
         const message = [
           "🍏 *QUIERO CONTRATAR UN PLAN NUTRYFIT*",
           "",
-          `*Duración:* Plan ${button.dataset.period}`,
+          `*Duración:* ${button.dataset.period}`,
+          `*Días:* ${button.dataset.schedule}`,
           `*Paquete:* ${button.dataset.plan}`,
+          `*Tamaño:* ${button.dataset.size}`,
           `*Precio publicado:* ${price}`,
+          `*Incluye:* ${button.dataset.includes}`,
           "",
           "Quiero confirmar disponibilidad, fecha de inicio y detalles del plan.",
         ].join("\n");
@@ -1341,6 +1479,7 @@
 
   function initialize() {
     updateOpenStatus();
+    renderMealPlans();
     renderGallery();
     renderCategories();
     renderCart();
