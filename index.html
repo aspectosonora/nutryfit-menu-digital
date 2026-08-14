@@ -169,13 +169,12 @@
           <p>Comidas listas de lunes a viernes. Elige la duración, revisa los paquetes y contrata directamente con Nutryfit.</p>
         </div>
 
-        <div class="plan-period-tabs" role="tablist" aria-label="Duración del plan">
+        <div class="plan-period-tabs" aria-label="Duración del plan">
           <button
-            class="plan-period-card active"
+            class="plan-period-card"
             id="weeklyPlanTab"
             type="button"
-            role="tab"
-            aria-selected="true"
+            aria-expanded="false"
             aria-controls="weeklyPlans"
             data-plan-tab="weeklyPlans"
           >
@@ -186,15 +185,14 @@
               <strong>Semanal</strong>
               <span>Lunes a viernes</span>
             </span>
-            <span class="plan-period-action">Ver paquetes <i data-lucide="arrow-down" aria-hidden="true"></i></span>
+            <span class="plan-period-action"><span data-plan-action-label>Ver paquetes</span><i data-lucide="arrow-down" aria-hidden="true"></i></span>
           </button>
 
           <button
             class="plan-period-card"
             id="monthlyPlanTab"
             type="button"
-            role="tab"
-            aria-selected="false"
+            aria-expanded="false"
             aria-controls="monthlyPlans"
             data-plan-tab="monthlyPlans"
           >
@@ -205,11 +203,11 @@
               <strong>Mensual</strong>
               <span>4 semanas</span>
             </span>
-            <span class="plan-period-action">Ver paquetes <i data-lucide="arrow-down" aria-hidden="true"></i></span>
+            <span class="plan-period-action"><span data-plan-action-label>Ver paquetes</span><i data-lucide="arrow-down" aria-hidden="true"></i></span>
           </button>
         </div>
 
-        <div class="plan-period-panel active" id="weeklyPlans" role="tabpanel" aria-labelledby="weeklyPlanTab">
+        <div class="plan-period-panel" id="weeklyPlans" role="region" aria-labelledby="weeklyPlanTab" hidden>
           <div class="plan-panel-heading">
             <div>
               <span class="plan-number">01</span>
@@ -294,7 +292,7 @@
           </div>
         </div>
 
-        <div class="plan-period-panel" id="monthlyPlans" role="tabpanel" aria-labelledby="monthlyPlanTab" hidden>
+        <div class="plan-period-panel" id="monthlyPlans" role="region" aria-labelledby="monthlyPlanTab" hidden>
           <div class="plan-panel-heading">
             <div>
               <span class="plan-number">02</span>

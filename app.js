@@ -1242,18 +1242,28 @@
     $$('[data-plan-tab]').forEach((tab) => {
       tab.addEventListener("click", () => {
         const targetId = tab.dataset.planTab;
+        const targetPanel = $(`#${targetId}`);
+        const shouldOpen = targetPanel.hidden;
+
         $$('[data-plan-tab]').forEach((item) => {
-          const isActive = item === tab;
-          item.classList.toggle("active", isActive);
-          item.setAttribute("aria-selected", String(isActive));
+          item.classList.remove("active");
+          item.setAttribute("aria-expanded", "false");
+          $("[data-plan-action-label]", item).textContent = "Ver paquetes";
         });
         $$(".plan-period-panel").forEach((panel) => {
-          const isActive = panel.id === targetId;
-          panel.hidden = !isActive;
-          panel.classList.toggle("active", isActive);
+          panel.hidden = true;
+          panel.classList.remove("active");
         });
+
+        if (!shouldOpen) return;
+
+        tab.classList.add("active");
+        tab.setAttribute("aria-expanded", "true");
+        $("[data-plan-action-label]", tab).textContent = "Ocultar paquetes";
+        targetPanel.hidden = false;
+        targetPanel.classList.add("active");
         window.requestAnimationFrame(() => {
-          $(`#${targetId}`).scrollIntoView({ behavior: "smooth", block: "nearest" });
+          targetPanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
         });
       });
     });

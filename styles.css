@@ -4937,6 +4937,31 @@ main {
   }
 }
 
+/* Ajuste de recorrido final: los planes se consultan bajo demanda y Yalvany cierra la experiencia. */
+.plans-section {
+  order: 5;
+}
+
+.nutritionist-section {
+  order: 9;
+}
+
+.checkout-section {
+  order: 8;
+}
+
+.map-section {
+  order: 10;
+}
+
+.plan-period-card[aria-expanded="true"] .plan-period-action svg {
+  transform: rotate(180deg);
+}
+
+.plan-period-action svg {
+  transition: transform 180ms ease;
+}
+
 /* =========================================================
    NUTRYFIT v9 — planes semanales y mensuales
    ========================================================= */
@@ -4964,7 +4989,7 @@ main {
 }
 
 .map-section {
-  order: 9;
+  order: 10;
 }
 
 .plans-heading {
