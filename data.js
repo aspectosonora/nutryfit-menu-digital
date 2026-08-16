@@ -1,13 +1,67 @@
 const NUTRYFIT_BOWL_LOW = [
-  { label: "Chico", price: 155 },
-  { label: "Mediano", price: 220 },
-  { label: "Grande", price: 270 },
+  { label: "Chico · 120 g", price: 155 },
+  { label: "Mediano · 150 g", price: 220 },
+  { label: "Grande · 240 g", price: 270 },
 ];
 
 const NUTRYFIT_BOWL_HIGH = [
-  { label: "Chico", price: 175 },
-  { label: "Mediano", price: 245 },
-  { label: "Grande", price: 330 },
+  { label: "Chico · 120 g", price: 175 },
+  { label: "Mediano · 150 g", price: 245 },
+  { label: "Grande · 240 g", price: 330 },
+];
+
+const NUTRYFIT_COLD_BAR = [
+  "Edamames",
+  "Panela",
+  "Zanahoria",
+  "Pimiento",
+  "Elote",
+  "Brócoli",
+  "Manzana verde",
+  "Tomate cherry",
+  "Espinaca",
+  "Champiñón",
+  "Cebolla morada",
+  "Aguacate",
+  "Philadelphia",
+  "Mango por temporada",
+  "Fresa por temporada",
+];
+
+const NUTRYFIT_BOWL_ADDONS = [
+  {
+    id: "portion-adjustments",
+    label: "Ajustes de porción",
+    note: "Nutryfit confirmará el cargo de estos ajustes por WhatsApp.",
+    options: [
+      { id: "double-base", label: "Doble base", price: null },
+      { id: "double-protein", label: "Doble proteína", price: null },
+    ],
+  },
+  {
+    id: "cold-bar-extras",
+    label: "Toppings extra de barra fría",
+    note: "Selecciona exactamente cuáles deseas. Cada uno suma $20.",
+    options: NUTRYFIT_COLD_BAR.map((label) => ({ id: `cold-${label}`, label, price: 20 })),
+  },
+];
+
+const NUTRYFIT_MILKS = {
+  id: "milk",
+  label: "Elige tu tipo de leche",
+  required: true,
+  single: true,
+  selectionOnly: true,
+  options: ["Entera", "Deslactosada", "Almendras", "Coco"].map((label) => ({ label, price: 0 })),
+};
+
+const NUTRYFIT_SANDWICH_ADDONS = [
+  {
+    id: "sandwich-extras",
+    label: "Ingredientes extra",
+    note: "Selecciona lo que deseas agregar; Nutryfit confirmará el cargo.",
+    options: ["Huevo", "Jamón", "Pollo", "Panela", "Aguacate"].map((label) => ({ label, price: null })),
+  },
 ];
 
 const NUTRYFIT_DRINK_SIZES = [
@@ -28,7 +82,7 @@ window.NUTRYFIT_DATA = {
     phone: "(644) 154 1732",
     branch: "Nutryfit Centro",
     address: "Av. No Reelección 101, local 3, Col. Centro.",
-    hours: "Lunes a viernes, de 9:00 a. m. a 2:00 p. m.",
+    hours: "Lunes a sábado, de 7:00 a. m. a 6:00 p. m.",
     timezone: "America/Hermosillo",
   },
   gallery: [
@@ -58,7 +112,7 @@ window.NUTRYFIT_DATA = {
       id: "sandwiches",
       name: "Sándwich & Toast",
       tagline: "Pan integral de granos y aderezo especial",
-      image: "./assets/avocado-egg-toast.png",
+      image: "./assets/sandwich-pollo.webp",
       icon: "sandwich",
     },
     {
@@ -86,7 +140,7 @@ window.NUTRYFIT_DATA = {
       id: "more",
       name: "Más opciones",
       tagline: "Fruta, burritos y opciones ligeras",
-      image: "./FOTOS/5.png",
+      image: "./assets/burrito-integral.webp",
       icon: "utensils",
     },
     {
@@ -107,7 +161,7 @@ window.NUTRYFIT_DATA = {
       id: "smoothies",
       name: "Licuados",
       tagline: "Mezclas cremosas y personalizables",
-      image: "./assets/bebidas.png",
+      image: "./assets/licuado-personalizado.webp",
       icon: "cup-soda",
     },
     {
@@ -167,6 +221,14 @@ window.NUTRYFIT_DATA = {
         "Verdura",
         "Espinaca",
       ],
+      addonGroups: [
+        {
+          id: "egg-extra",
+          label: "Ingrediente extra",
+          note: "El precio del huevo extra se confirma por WhatsApp.",
+          options: [{ label: "Huevo", price: null }],
+        },
+      ],
     },
 
     {
@@ -176,6 +238,7 @@ window.NUTRYFIT_DATA = {
       description: "Jamón de pavo, queso americano, lechuga, tomate, alfalfa y aguacate.",
       image: "./assets/avocado-egg-toast.png",
       price: 50,
+      addonGroups: NUTRYFIT_SANDWICH_ADDONS,
     },
     {
       id: "sandwich-jamon-panela",
@@ -184,6 +247,7 @@ window.NUTRYFIT_DATA = {
       description: "Jamón de pavo, panela, lechuga, tomate, alfalfa y aguacate.",
       image: "./assets/avocado-egg-toast.png",
       price: 55,
+      addonGroups: NUTRYFIT_SANDWICH_ADDONS,
     },
     {
       id: "sandwich-huevo-panela",
@@ -192,14 +256,16 @@ window.NUTRYFIT_DATA = {
       description: "Huevo en torta, queso panela, espinaca, tomate, alfalfa y aguacate.",
       image: "./assets/avocado-egg-toast.png",
       price: 70,
+      addonGroups: NUTRYFIT_SANDWICH_ADDONS,
     },
     {
       id: "sandwich-pollo",
       categoryId: "sandwiches",
       name: "Sándwich de pollo",
       description: "Pechuga de pollo a la plancha, queso Oaxaca gratinado, lechuga, alfalfa, tomate y aguacate.",
-      image: "./assets/avocado-egg-toast.png",
+      image: "./assets/sandwich-pollo.webp",
       price: 80,
+      addonGroups: NUTRYFIT_SANDWICH_ADDONS,
     },
     {
       id: "sandwich-atun",
@@ -208,6 +274,7 @@ window.NUTRYFIT_DATA = {
       description: "Atún cremoso con chipotle, lechuga, alfalfa, tomate y aguacate.",
       image: "./assets/avocado-egg-toast.png",
       price: 70,
+      addonGroups: NUTRYFIT_SANDWICH_ADDONS,
     },
     {
       id: "avocado-egg-toast",
@@ -250,6 +317,14 @@ window.NUTRYFIT_DATA = {
         { label: "Con huevo", price: 135 },
         { label: "Con pollo", price: 145 },
       ],
+      addonGroups: [
+        {
+          id: "chilaquiles-extras",
+          label: "Ingredientes extra",
+          note: "Selecciona lo que deseas agregar; Nutryfit confirmará el cargo.",
+          options: ["Huevo", "Pollo", "Frijol", "Aguacate", "Panela", "Crema", "Salsa"].map((label) => ({ label, price: null })),
+        },
+      ],
     },
 
     {
@@ -260,6 +335,7 @@ window.NUTRYFIT_DATA = {
         "Arroz, camarón, mango, pimiento, zanahoria y aguacate; spicy mayo, sriracha, anguila y tiras de maíz.",
       image: "./assets/tropical-shrimp.png",
       priceOptions: NUTRYFIT_BOWL_HIGH,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "caribeno",
@@ -269,6 +345,7 @@ window.NUTRYFIT_DATA = {
         "Noodles de pepino y quinoa, salmón, arándano, manzana verde, aguacate y zanahoria; frutos rojos y tiras de maíz.",
       image: "./assets/caribeno.png",
       priceOptions: NUTRYFIT_BOWL_HIGH,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "tuna-mango",
@@ -278,6 +355,7 @@ window.NUTRYFIT_DATA = {
         "Arroz, medallón de atún y tampico, mango, edamames, zanahoria y aguacate; chipotle, anguila y wonton.",
       image: "./assets/tuna-mango.png",
       priceOptions: NUTRYFIT_BOWL_HIGH,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "chicken-buffalo",
@@ -287,6 +365,7 @@ window.NUTRYFIT_DATA = {
         "Arroz, pollo buffalo, brócoli, zanahoria, arándano y Philadelphia; chipotle, ranch y crutones.",
       image: "./FOTOS/1.png",
       priceOptions: NUTRYFIT_BOWL_LOW,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "tampico-crunch",
@@ -295,6 +374,7 @@ window.NUTRYFIT_DATA = {
       description: "Arroz, tampico, pepino, pimiento y elote; aderezo chipotle y crutones.",
       image: "./assets/tampico-crunch.png",
       priceOptions: NUTRYFIT_BOWL_LOW,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
 
     {
@@ -305,10 +385,11 @@ window.NUTRYFIT_DATA = {
         "Lechuga orejona, pollo mostaza miel, pepino, tomate cherry, panela y aceitunas; chipotle y crutones.",
       image: "./assets/ensalada-vital.png",
       priceOptions: [
-        { label: "Chico", price: 155 },
-        { label: "Mediano", price: 245 },
-        { label: "Grande", price: 270 },
+        { label: "Chico · 120 g", price: 155 },
+        { label: "Mediano · 150 g", price: 245 },
+        { label: "Grande · 240 g", price: 270 },
       ],
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "tropical-glow",
@@ -318,10 +399,11 @@ window.NUTRYFIT_DATA = {
         "Mix de lechugas, pollo mostaza miel, mango, aguacate, zanahoria y arándano; frutos rojos y tiras de maíz.",
       image: "./assets/tropical-glow.png",
       priceOptions: [
-        { label: "Chico", price: 155 },
-        { label: "Mediano", price: 245 },
-        { label: "Grande", price: 330 },
+        { label: "Chico · 120 g", price: 155 },
+        { label: "Mediano · 150 g", price: 245 },
+        { label: "Grande · 240 g", price: 330 },
       ],
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "ensalada-pollo-buffalo",
@@ -331,10 +413,11 @@ window.NUTRYFIT_DATA = {
         "Mix de lechugas, pollo buffalo, zanahoria, champiñón y aguacate; ranch y tiras de maíz.",
       image: "./assets/ensalada-pollo-buffalo.png",
       priceOptions: [
-        { label: "Chico", price: 155 },
-        { label: "Mediano", price: 245 },
-        { label: "Grande", price: 330 },
+        { label: "Chico · 120 g", price: 155 },
+        { label: "Mediano · 150 g", price: 245 },
+        { label: "Grande · 240 g", price: 330 },
       ],
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "dulce-power",
@@ -346,6 +429,7 @@ window.NUTRYFIT_DATA = {
       choiceLabel: "Elige tu proteína",
       choices: ["Atún fresco", "Salmón"],
       priceOptions: NUTRYFIT_BOWL_HIGH,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
     {
       id: "ensalada-mediterranea",
@@ -355,6 +439,7 @@ window.NUTRYFIT_DATA = {
         "Pollo mostaza miel, lechuga orejona, pepino, tomate cherry, alfalfa, fruta de temporada y panela; crutones y chipotle.",
       image: "./assets/ensalada-mediterranea.png",
       price: 155,
+      addonGroups: NUTRYFIT_BOWL_ADDONS,
     },
 
     {
@@ -378,7 +463,7 @@ window.NUTRYFIT_DATA = {
       categoryId: "more",
       name: "Burritos en tortilla integral",
       description: "3 piezas de machaca con verdura, papas con chorizo o frijol. Acompañados de ensalada.",
-      image: "./FOTOS/2.png",
+      image: "./assets/burrito-integral.webp",
       price: 80,
       choiceLabel: "Elige el relleno",
       choices: ["Machaca con verdura", "Papas con chorizo", "Frijol"],
@@ -388,7 +473,7 @@ window.NUTRYFIT_DATA = {
       categoryId: "more",
       name: "Burritos en tortilla de avena",
       description: "3 piezas de machaca con verdura, papas con chorizo o frijol. Acompañados de ensalada.",
-      image: "./FOTOS/2.png",
+      image: "./assets/burrito-integral.webp",
       price: 95,
       choiceLabel: "Elige el relleno",
       choices: ["Machaca con verdura", "Papas con chorizo", "Frijol"],
@@ -399,8 +484,16 @@ window.NUTRYFIT_DATA = {
       categoryId: "sweet",
       name: "Hot Cakes de Avena",
       description: "Acompañados de kiwi, fresa, plátano y miel.",
-      image: "./assets/hotcakes-avena.png",
+      image: "./assets/hotcakes-real.webp",
       price: 120,
+      addonGroups: [
+        {
+          id: "hotcakes-extras",
+          label: "Ingredientes extra",
+          note: "Selecciona lo que deseas agregar; Nutryfit confirmará el cargo.",
+          options: ["Miel", "Crema de cacahuate"].map((label) => ({ label, price: null })),
+        },
+      ],
     },
     {
       id: "pan-crema",
@@ -461,14 +554,71 @@ window.NUTRYFIT_DATA = {
       priceOptions: NUTRYFIT_DRINK_SIZES,
     },
     {
-      id: "licuados",
+      id: "licuado-digestivo",
       categoryId: "smoothies",
-      name: "Licuados",
-      description: "Elige una receta o arma tu combinación con frutas, semillas y complementos.",
-      image: "./assets/bebidas.png",
-      choiceLabel: "Elige tu licuado",
-      choices: ["Digestivo", "Mazapán", "Strawberry", "Choco Banana", "Fresa Plátano", "Arma tu licuado"],
+      name: "Digestivo",
+      description: "Papaya, manzana, canela, vainilla, All Bran, linaza y chía.",
+      image: "./assets/licuado-digestivo.webp",
       priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [NUTRYFIT_MILKS],
+    },
+    {
+      id: "licuado-mazapan",
+      categoryId: "smoothies",
+      name: "Mazapán",
+      description: "Plátano, espinaca, crema de cacahuate y vainilla.",
+      image: "./assets/licuado-mazapan.webp",
+      priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [NUTRYFIT_MILKS],
+    },
+    {
+      id: "licuado-strawberry",
+      categoryId: "smoothies",
+      name: "Strawberry",
+      description: "Fresa, blueberries, arándano y plátano.",
+      image: "./assets/licuado-strawberry.webp",
+      priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [NUTRYFIT_MILKS],
+    },
+    {
+      id: "licuado-choco-banana",
+      categoryId: "smoothies",
+      name: "Choco Banana",
+      description: "Cacao, plátano y avena.",
+      image: "./assets/licuado-choco-banana.webp",
+      priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [NUTRYFIT_MILKS],
+    },
+    {
+      id: "licuado-fresa-platano",
+      categoryId: "smoothies",
+      name: "Fresa Plátano",
+      description: "Fresa y plátano.",
+      image: "./assets/licuado-fresa-platano.webp",
+      priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [NUTRYFIT_MILKS],
+    },
+    {
+      id: "licuado-personalizado",
+      categoryId: "smoothies",
+      name: "Arma tu licuado",
+      description: "Combina frutas, semillas y complementos a tu gusto.",
+      image: "./assets/licuado-personalizado.webp",
+      priceOptions: NUTRYFIT_SMOOTHIE_SIZES,
+      addonGroups: [
+        NUTRYFIT_MILKS,
+        {
+          id: "smoothie-ingredients",
+          label: "Elige los ingredientes",
+          note: "Selecciona tu combinación; Nutryfit confirmará las cantidades según el tamaño.",
+          required: true,
+          selectionOnly: true,
+          options: [
+            "Manzana roja", "Manzana verde", "Papaya", "Melón", "Mango", "Espinaca", "Plátano", "Fresa",
+            "Avena", "Chía", "Linaza", "Nuez", "Almendras", "Arándanos", "Cacao", "Chocomilk",
+          ].map((label) => ({ label, price: 0 })),
+        },
+      ],
     },
 
     {
@@ -524,9 +674,9 @@ window.NUTRYFIT_DATA = {
   ],
   pokeBuilder: {
     sizes: [
-      { id: "small", name: "Chico", grams: "90 g", coldLimit: 3 },
+      { id: "small", name: "Chico", grams: "120 g", coldLimit: 3 },
       { id: "medium", name: "Mediano", grams: "150 g", coldLimit: 4 },
-      { id: "large", name: "Grande", grams: "210 g", coldLimit: 5 },
+      { id: "large", name: "Grande", grams: "240 g", coldLimit: 5 },
     ],
     bases: ["Lechuga orejona", "Arroz", "Quinoa", "Noodles de pepino"],
     proteins: [
@@ -542,23 +692,7 @@ window.NUTRYFIT_DATA = {
       1: { small: 155, medium: 220, large: 270 },
       2: { small: 175, medium: 245, large: 330 },
     },
-    coldBar: [
-      "Edamames",
-      "Panela",
-      "Zanahoria",
-      "Pimiento",
-      "Elote",
-      "Brócoli",
-      "Manzana verde",
-      "Tomate cherry",
-      "Espinaca",
-      "Champiñón",
-      "Cebolla morada",
-      "Aguacate",
-      "Philadelphia",
-      "Mango por temporada",
-      "Fresa por temporada",
-    ],
+    coldBar: NUTRYFIT_COLD_BAR,
     dressings: [
       "Ranch",
       "Chipotle",
@@ -574,7 +708,6 @@ window.NUTRYFIT_DATA = {
     crunch: ["Crutones", "Tiritas de maíz", "Tiritas de wonton", "Cebolla caramelizada"],
     extras: [
       { id: "dressing-extra", name: "Aderezo extra", price: 15 },
-      { id: "topping-extra", name: "Topping extra", price: 20 },
       { id: "pollo-extra", name: "Pollo 60 g", price: 25 },
       { id: "tampico-extra", name: "Tampico 60 g", price: 25 },
       { id: "atun-extra", name: "Atún 60 g", price: 45 },

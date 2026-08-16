@@ -49,7 +49,7 @@
           </div>
           <div class="hero-details">
             <p><i data-lucide="map-pin" aria-hidden="true"></i> Av. No Reelección 101, local 3, Col. Centro</p>
-            <p><i data-lucide="clock-3" aria-hidden="true"></i> Lun–Vie · 9:00 a. m.–2:00 p. m.</p>
+            <p><i data-lucide="clock-3" aria-hidden="true"></i> Lun–Sáb · 7:00 a. m.–6:00 p. m.</p>
           </div>
           <div class="hero-actions">
             <a class="button button-lime" href="#menu">Pedir ahora</a>
@@ -146,6 +146,7 @@
                 Agenda tu consulta
               </a>
             </div>
+            <p class="calendar-pending"><i data-lucide="calendar-clock" aria-hidden="true"></i> Consulta horarios y reserva por WhatsApp; la agenda en línea estará disponible próximamente.</p>
           </div>
         </div>
       </section>
@@ -396,9 +397,8 @@
           <input
             id="productSearch"
             type="search"
-            placeholder="Selecciona una categoría para buscar"
+            placeholder="Buscar platillo o ingrediente"
             autocomplete="off"
-            disabled
           />
         </label>
 
@@ -506,17 +506,26 @@
               <div class="pending-alert field-wide">
                 <i data-lucide="info" aria-hidden="true"></i>
                 <div>
-                  <strong>FALTA INFO: zonas y tarifas de envío.</strong>
-                  <span>El envío aparecerá como “Por confirmar” y no se sumará como $0.</span>
+                  <strong>Costo de envío por confirmar.</strong>
+                  <span>Nutryfit lo calculará en WhatsApp según tu dirección.</span>
                 </div>
               </div>
             </div>
 
             <label class="field field-wide">
-              <span>Método de pago</span>
-              <select id="paymentMethod" disabled>
-                <option>FALTA INFO: métodos de pago aceptados</option>
-              </select>
+              <span>Método de pago preferido *</span>
+              <input
+                id="paymentMethod"
+                name="payment"
+                type="text"
+                placeholder="Escribe cómo prefieres pagar"
+                required
+              />
+              <small>Nutryfit confirmará por WhatsApp si el método está disponible.</small>
+            </label>
+            <label class="field field-wide">
+              <span>Si pagarás en efectivo, ¿con cuánto? (opcional)</span>
+              <input id="cashAmount" name="cashAmount" type="text" inputmode="decimal" placeholder="Ej. $500" />
             </label>
             <label class="field field-wide">
               <span>Notas generales (opcional)</span>
@@ -597,7 +606,7 @@
       <div class="footer-info">
         <span>Av. No Reelección 101, local 3, Col. Centro.</span>
         <a href="tel:+526441541732">(644) 154 1732</a>
-        <span>Lun–Vie · 9:00 a. m.–2:00 p. m.</span>
+        <span>Lun–Sáb · 7:00 a. m.–6:00 p. m.</span>
         <span>Recoger y domicilio</span>
       </div>
       <div class="footer-links">
@@ -684,6 +693,49 @@
             <i data-lucide="arrow-right" aria-hidden="true"></i>
           </button>
         </footer>
+      </div>
+    </dialog>
+
+    <dialog class="product-dialog plan-order-dialog" id="planOrderDialog" aria-labelledby="planOrderTitle">
+      <div class="dialog-sheet">
+        <button class="modal-close" type="button" data-close-plan-order aria-label="Cerrar">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+        <div class="plan-order-content">
+          <p class="eyebrow">CONTRATA TU PLAN</p>
+          <h2 id="planOrderTitle">Completa tus datos</h2>
+          <div class="plan-order-summary" id="planOrderSummary"></div>
+          <form id="planOrderForm" novalidate>
+            <label class="field field-wide">
+              <span>Nombre completo *</span>
+              <input id="planCustomerName" type="text" autocomplete="name" required />
+            </label>
+            <label class="field field-wide">
+              <span>Teléfono *</span>
+              <input id="planCustomerPhone" type="tel" inputmode="tel" autocomplete="tel" required />
+            </label>
+            <fieldset class="choice-fieldset">
+              <legend>¿Cómo deseas recibir tu plan? *</legend>
+              <div class="segmented-control">
+                <label><input type="radio" name="planDelivery" value="pickup" checked /><span><i data-lucide="store" aria-hidden="true"></i> Recoger</span></label>
+                <label><input type="radio" name="planDelivery" value="delivery" /><span><i data-lucide="bike" aria-hidden="true"></i> Domicilio</span></label>
+              </div>
+            </fieldset>
+            <div class="delivery-fields" id="planDeliveryFields" hidden>
+              <label class="field field-wide"><span>Calle y número *</span><input id="planAddress" type="text" autocomplete="street-address" /></label>
+              <label class="field"><span>Colonia *</span><input id="planNeighborhood" type="text" /></label>
+              <label class="field"><span>Referencia *</span><input id="planReference" type="text" /></label>
+              <label class="field field-wide"><span>Ubicación o enlace de Google Maps (opcional)</span><input id="planLocation" type="url" inputmode="url" /></label>
+              <div class="pending-alert field-wide">
+                <i data-lucide="message-circle" aria-hidden="true"></i>
+                <div><strong>Envío por estimar.</strong><span>Nutryfit calculará el costo en WhatsApp según tu dirección.</span></div>
+              </div>
+            </div>
+            <label class="field field-wide"><span>Método de pago preferido *</span><input id="planPaymentMethod" type="text" placeholder="Escribe cómo prefieres pagar" required /><small>Se confirma directamente con Nutryfit.</small></label>
+            <label class="field field-wide"><span>Notas (opcional)</span><textarea id="planNotes" rows="2" placeholder="Ej. fecha en que deseas iniciar"></textarea></label>
+            <button class="button button-whatsapp button-full" id="sendPlanWhatsapp" type="submit"><i data-lucide="message-circle" aria-hidden="true"></i> Enviar solicitud por WhatsApp</button>
+          </form>
+        </div>
       </div>
     </dialog>
 

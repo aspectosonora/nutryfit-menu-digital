@@ -18,6 +18,7 @@
     lightboxIndex: 0,
     cart: loadCart(),
     builder: createBuilderState(),
+    selectedPlan: null,
   };
 
   const refs = {
@@ -59,6 +60,9 @@
     bottomCartCount: $("#bottomCartCount"),
     deliveryFields: $("#deliveryFields"),
     pickupNote: $("#pickupNote"),
+    planOrderDialog: $("#planOrderDialog"),
+    planOrderSummary: $("#planOrderSummary"),
+    planDeliveryFields: $("#planDeliveryFields"),
     toast: $("#toast"),
   };
 
@@ -239,12 +243,12 @@
         .filter((part) => part.type !== "literal")
         .map((part) => [part.type, part.value]),
     );
-    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const minutes = Number(parts.hour) * 60 + Number(parts.minute);
-    const isOpen = weekdays.includes(parts.weekday) && minutes >= 540 && minutes < 840;
+    const isOpen = weekdays.includes(parts.weekday) && minutes >= 420 && minutes < 1080;
     const element = $("#openStatus");
     element.classList.toggle("closed", !isOpen);
-    $("strong", element).textContent = isOpen ? "Abierto ahora · cierra a las 2:00 p. m." : "Cerrado ahora · consulta por WhatsApp";
+    $("strong", element).textContent = isOpen ? "Abierto ahora · cierra a las 6:00 p. m." : "Cerrado ahora · consulta por WhatsApp";
   }
 
   function renderGallery() {
@@ -308,7 +312,7 @@
     state.search = "";
     refs.productSearch.value = "";
     refs.productSearch.disabled = false;
-    refs.productSearch.placeholder = "Buscar dentro de esta categoría";
+    refs.productSearch.placeholder = "Buscar platillo o ingrediente";
     refs.categoryEmpty.hidden = true;
     refs.productsActive.hidden = false;
     renderCategories();
@@ -322,8 +326,8 @@
     state.selectedCategory = null;
     state.search = "";
     refs.productSearch.value = "";
-    refs.productSearch.disabled = true;
-    refs.productSearch.placeholder = "Selecciona una categoría para buscar";
+    refs.productSearch.disabled = false;
+    refs.productSearch.placeholder = "Buscar platillo o ingrediente";
     refs.categoryEmpty.hidden = false;
     refs.productsActive.hidden = true;
     renderCategories();
@@ -331,16 +335,25 @@
 
   function renderProducts() {
     const category = data.categories.find((item) => item.id === state.selectedCategory);
-    if (!category) return;
-    refs.activeCategoryTitle.textContent = category.name;
-    refs.activeCategoryTagline.textContent = category.tagline;
     const query = state.search.trim().toLocaleLowerCase("es-MX");
+    if (!category && !query) return;
+    refs.categoryEmpty.hidden = true;
+    refs.productsActive.hidden = false;
+    refs.activeCategoryTitle.textContent = category?.name || "Resultados de búsqueda";
+    refs.activeCategoryTagline.textContent = category?.tagline || `Coincidencias para “${state.search.trim()}” en todo el menú.`;
     const products = data.products.filter(
       (product) =>
-        product.categoryId === category.id &&
+        (!category || product.categoryId === category.id) &&
         (!query ||
-          product.name.toLocaleLowerCase("es-MX").includes(query) ||
-          product.description.toLocaleLowerCase("es-MX").includes(query)),
+          [
+            product.name,
+            product.description,
+            ...(product.choices || []),
+            ...(product.addonGroups || []).flatMap((group) => group.options.map((option) => option.label)),
+          ]
+            .join(" ")
+            .toLocaleLowerCase("es-MX")
+            .includes(query)),
     );
 
     refs.productGrid.innerHTML = products.length
@@ -385,12 +398,45 @@
             `,
           )
           .join("")
-      : `<div class="category-empty"><i data-lucide="search-x" aria-hidden="true"></i><h3>Sin coincidencias</h3><p>Prueba con otro término dentro de ${escapeHtml(category.name)}.</p></div>`;
+      : `<div class="category-empty"><i data-lucide="search-x" aria-hidden="true"></i><h3>Sin coincidencias</h3><p>Prueba con otro nombre o ingrediente${category ? ` dentro de ${escapeHtml(category.name)}` : ""}.</p></div>`;
 
     $$("[data-product]", refs.productGrid).forEach((button) => {
       button.addEventListener("click", () => openProduct(button.dataset.product));
     });
     refreshIcons();
+  }
+
+  function renderAddonGroups(product) {
+    if (!product.addonGroups?.length) return "";
+    return product.addonGroups
+      .map(
+        (group) => `
+          <fieldset class="simple-price-options simple-addon-options">
+            <legend>${escapeHtml(group.label)}${group.required ? " *" : ""}</legend>
+            ${group.note ? `<p class="addon-note">${escapeHtml(group.note)}</p>` : ""}
+            ${group.options
+              .map(
+                (option, index) => `
+                  <label>
+                    <input
+                      type="${group.single ? "radio" : "checkbox"}"
+                      name="addon-${escapeHtml(group.id)}"
+                      value="${index}"
+                      data-addon-group="${escapeHtml(group.id)}"
+                      ${group.single && index === 0 ? "checked" : ""}
+                    />
+                    <span>
+                      <strong>${escapeHtml(option.label)}</strong>
+                      <b>${group.selectionOnly ? "Elegir" : option.price == null ? "Por confirmar" : option.price ? `+${formatMoney(option.price)}` : "Incluido"}</b>
+                    </span>
+                  </label>
+                `,
+              )
+              .join("")}
+          </fieldset>
+        `,
+      )
+      .join("");
   }
 
   function openProduct(productId) {
@@ -468,6 +514,7 @@
                       </div>
                     `
                 }
+                ${renderAddonGroups(product)}
                 <label class="field simple-notes">
                   <span>Notas para este producto (opcional)</span>
                   <textarea id="simpleProductNotes" rows="2" placeholder="Ej. sin cebolla"></textarea>
@@ -496,8 +543,8 @@
               <div class="missing-price-card">
                 <i data-lucide="info" aria-hidden="true"></i>
                 <div>
-                  <strong>FALTA INFO: precio y descripción confirmados.</strong>
-                  <span>Este producto no se agrega como $0. Puedes pedir la información por WhatsApp.</span>
+                  <strong>Precio por confirmar.</strong>
+                  <span>Consulta disponibilidad y precio directamente con Nutryfit por WhatsApp.</span>
                 </div>
               </div>
               ${product.reviewNote ? `<p class="review-note">${escapeHtml(product.reviewNote)}</p>` : ""}
@@ -529,13 +576,26 @@
         const selected = $('input[name="simpleProductChoice"]:checked', refs.productDialogContent);
         return product.choices[Number(selected?.value || 0)];
       };
-      const unitPrice = () => selectedOption()?.price ?? product.price;
+      const selectedAddons = () =>
+        (product.addonGroups || []).flatMap((group) =>
+          $$(`[data-addon-group="${group.id}"]:checked`, refs.productDialogContent).map((input) => {
+            const option = group.options[Number(input.value)];
+            return { group: group.label, name: option.label, price: option.price };
+          }),
+        );
+      const unitPrice = () =>
+        (selectedOption()?.price ?? product.price) +
+        selectedAddons().reduce((sum, addon) => sum + (addon.price || 0), 0);
+      const hasPendingAddons = () => selectedAddons().some((addon) => addon.price == null);
       const updateSimpleProductTotal = () => {
         $("#simpleQtyValue").textContent = quantity;
-        $("#simpleProductTotal").textContent = formatMoney(unitPrice() * quantity);
+        $("#simpleProductTotal").textContent = `${formatMoney(unitPrice() * quantity)}${hasPendingAddons() ? " + ajuste por confirmar" : ""}`;
         $("#simpleQtyMinus").disabled = quantity <= 1;
       };
       $$('input[name="simplePriceOption"]', refs.productDialogContent).forEach((input) => {
+        input.addEventListener("change", updateSimpleProductTotal);
+      });
+      $$('[data-addon-group]', refs.productDialogContent).forEach((input) => {
         input.addEventListener("change", updateSimpleProductTotal);
       });
       $("#simpleQtyMinus").addEventListener("click", () => {
@@ -551,6 +611,7 @@
           product,
           selectedOption(),
           selectedChoice(),
+          selectedAddons(),
           quantity,
           $("#simpleProductNotes").value.trim(),
         );
@@ -566,18 +627,27 @@
     window.open(`https://wa.me/${data.business.whatsapp}?text=${encodeURIComponent(message)}`, "_blank", "noopener");
   }
 
-  function addSimpleProductToCart(product, option, choice, quantity, notes) {
+  function addSimpleProductToCart(product, option, choice, addons, quantity, notes) {
+    const missingRequired = (product.addonGroups || []).find(
+      (group) => group.required && !addons.some((addon) => addon.group === group.label),
+    );
+    if (missingRequired) {
+      showToast(`Selecciona: ${missingRequired.label}.`);
+      return;
+    }
     const item = {
       id: `product-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       productId: product.id,
       name: product.name,
       image: product.image,
       quantity,
-      unitPrice: option?.price ?? product.price,
+      unitPrice: (option?.price ?? product.price) + addons.reduce((sum, addon) => sum + (addon.price || 0), 0),
+      pendingAdjustments: addons.filter((addon) => addon.price == null).map((addon) => addon.name),
       config: {
         type: "simple",
         option: option?.label || "",
         choice,
+        addons,
         notes,
       },
     };
@@ -593,8 +663,11 @@
       step: 1,
       size: null,
       base: null,
+      doubleBase: false,
       protein: null,
+      doubleProtein: false,
       cold: [],
+      extraCold: [],
       dressings: [],
       crunch: null,
       extras: {},
@@ -624,7 +697,7 @@
   }
 
   function builderExtrasTotal() {
-    return data.pokeBuilder.extras.reduce(
+    return state.builder.extraCold.length * 20 + data.pokeBuilder.extras.reduce(
       (sum, extra) => sum + (state.builder.extras[extra.id] || 0) * extra.price,
       0,
     );
@@ -713,8 +786,12 @@
       <div class="builder-intro">
         <p class="eyebrow">PASO 2</p>
         <h3>Elige tu base</h3>
-        <p>Selecciona exactamente una base para tu poke.</p>
+        <p>Selecciona una base. Si deseas doble porción, indícalo aquí mismo.</p>
       </div>
+      <label class="builder-inline-extra">
+        <input type="checkbox" id="builderDoubleBase" ${state.builder.doubleBase ? "checked" : ""} />
+        <span><strong>Quiero doble base</strong><small>Cargo por confirmar con Nutryfit</small></span>
+      </label>
       <div class="option-grid">
         ${data.pokeBuilder.bases
           .map((base) =>
@@ -737,8 +814,12 @@
       <div class="builder-intro">
         <p class="eyebrow">PASO 3</p>
         <h3>Elige tu proteína</h3>
-        <p>El precio cambia automáticamente según la proteína y el tamaño ${escapeHtml(size?.name || "")}.</p>
+        <p>El precio cambia según proteína y tamaño. Puedes pedir doble proteína en este paso.</p>
       </div>
+      <label class="builder-inline-extra">
+        <input type="checkbox" id="builderDoubleProtein" ${state.builder.doubleProtein ? "checked" : ""} />
+        <span><strong>Quiero doble proteína</strong><small>Cargo por confirmar con Nutryfit</small></span>
+      </label>
       <div class="option-grid">
         ${data.pokeBuilder.proteins
           .map((protein) =>
@@ -784,6 +865,27 @@
           )
           .join("")}
       </div>
+      <div class="builder-extra-cold">
+        <div class="builder-intro compact">
+          <p class="eyebrow">TOPPINGS EXTRA · +$20 C/U</p>
+          <h4>¿Quieres agregar algo más?</h4>
+          <p>Marca exactamente los ingredientes extra que deseas; aparecerán por nombre en tu pedido.</p>
+        </div>
+        <div class="option-grid">
+          ${data.pokeBuilder.coldBar
+            .map((ingredient) =>
+              optionCard({
+                type: "checkbox",
+                name: "builder-extra-cold",
+                value: ingredient,
+                label: ingredient,
+                detail: "+$20",
+                checked: state.builder.extraCold.includes(ingredient),
+              }),
+            )
+            .join("")}
+        </div>
+      </div>
     `;
   }
 
@@ -814,7 +916,7 @@
           )
           .join("")}
       </div>
-      <p class="builder-pending">FALTA INFO: confirmar opción “Sin aderezo”.</p>
+      <p class="builder-pending">Si lo prefieres sin aderezo, indícalo en las notas del siguiente paso.</p>
     `;
   }
 
@@ -838,7 +940,7 @@
           )
           .join("")}
       </div>
-      <p class="builder-pending">FALTA INFO: confirmar opción “Sin crocante”.</p>
+      <p class="builder-pending">Si lo prefieres sin crocante, indícalo en las notas del siguiente paso.</p>
     `;
   }
 
@@ -893,11 +995,16 @@
       .filter((extra) => state.builder.extras[extra.id])
       .map((extra) => `${extra.name} × ${state.builder.extras[extra.id]}`)
       .join(", ");
+    const pendingAdjustments = [
+      state.builder.doubleBase ? "Doble base" : "",
+      state.builder.doubleProtein ? "Doble proteína" : "",
+    ].filter(Boolean);
     const rows = [
       ["Tamaño", `${size.name} · ${size.grams}`, 1],
-      ["Base", state.builder.base, 2],
-      ["Proteína", protein.name, 3],
+      ["Base", `${state.builder.base}${state.builder.doubleBase ? " · doble base (cargo por confirmar)" : ""}`, 2],
+      ["Proteína", `${protein.name}${state.builder.doubleProtein ? " · doble proteína (cargo por confirmar)" : ""}`, 3],
       ["Barra fría", state.builder.cold.length ? state.builder.cold.join(", ") : "Sin ingredientes seleccionados", 4],
+      ["Toppings extra", state.builder.extraCold.length ? state.builder.extraCold.join(", ") : "Sin toppings extra", 4],
       ["Aderezos", state.builder.dressings.join(", "), 5],
       ["Crocante", state.builder.crunch, 6],
       [
@@ -926,7 +1033,7 @@
       </div>
       <div class="review-total">
         <span>${state.builder.quantity} × ${formatMoney(builderUnitPrice())}</span>
-        <strong>${formatMoney(builderTotal())}</strong>
+        <strong>${formatMoney(builderTotal())}${pendingAdjustments.length ? " + ajuste por confirmar" : ""}</strong>
       </div>
     `;
   }
@@ -953,6 +1060,10 @@
           renderBuilder();
         });
       });
+      $("#builderDoubleBase")?.addEventListener("change", (event) => {
+        builder.doubleBase = event.target.checked;
+        renderBuilder();
+      });
     }
     if (builder.step === 3) {
       $$('input[name="builder-protein"]', refs.builderContent).forEach((input) => {
@@ -961,12 +1072,23 @@
           renderBuilder();
         });
       });
+      $("#builderDoubleProtein")?.addEventListener("change", (event) => {
+        builder.doubleProtein = event.target.checked;
+        renderBuilder();
+      });
     }
     if (builder.step === 4) {
       $$('input[name="builder-cold"]', refs.builderContent).forEach((input) => {
         input.addEventListener("change", () => {
           if (input.checked) builder.cold.push(input.value);
           else builder.cold = builder.cold.filter((item) => item !== input.value);
+          renderBuilder();
+        });
+      });
+      $$('input[name="builder-extra-cold"]', refs.builderContent).forEach((input) => {
+        input.addEventListener("change", () => {
+          if (input.checked) builder.extraCold.push(input.value);
+          else builder.extraCold = builder.extraCold.filter((item) => item !== input.value);
           renderBuilder();
         });
       });
@@ -1065,6 +1187,13 @@
         quantity: state.builder.extras[extra.id],
         price: extra.price,
       }));
+    state.builder.extraCold.forEach((ingredient) => {
+      extras.push({ name: `Topping extra: ${ingredient}`, quantity: 1, price: 20 });
+    });
+    const pendingAdjustments = [
+      state.builder.doubleBase ? "Doble base" : "",
+      state.builder.doubleProtein ? "Doble proteína" : "",
+    ].filter(Boolean);
     const item = {
       id: `poke-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       productId: product.id,
@@ -1072,10 +1201,11 @@
       image: product.image,
       quantity: state.builder.quantity,
       unitPrice: builderUnitPrice(),
+      pendingAdjustments,
       config: {
         size: `${size.name} · ${size.grams}`,
-        base: state.builder.base,
-        protein: protein.name,
+        base: `${state.builder.base}${state.builder.doubleBase ? " · doble base" : ""}`,
+        protein: `${protein.name}${state.builder.doubleProtein ? " · doble proteína" : ""}`,
         cold: [...state.builder.cold],
         dressings: [...state.builder.dressings],
         crunch: state.builder.crunch,
@@ -1100,7 +1230,12 @@
 
   function itemConfigShort(item) {
     if (item.config.type === "simple") {
-      return [item.config.choice, item.config.option, item.config.notes ? "Con notas" : ""]
+      return [
+        item.config.choice,
+        item.config.option,
+        item.config.addons?.length ? `${item.config.addons.length} ajustes` : "",
+        item.config.notes ? "Con notas" : "",
+      ]
         .filter(Boolean)
         .join(" · ") || "Producto individual";
     }
@@ -1117,6 +1252,7 @@
     const subtotal = cartSubtotal();
     const hasItems = count > 0;
     const deliveryType = $('input[name="delivery"]:checked')?.value || "pickup";
+    const hasPendingAdjustments = state.cart.some((item) => item.pendingAdjustments?.length);
 
     refs.headerCartCount.textContent = count;
     refs.bottomCartCount.textContent = count;
@@ -1140,7 +1276,7 @@
             <div>
               <div class="cart-item-head">
                 <h4>${escapeHtml(item.name)}</h4>
-                <span class="cart-item-price">${formatMoney(item.unitPrice * item.quantity)}</span>
+                <span class="cart-item-price">${formatMoney(item.unitPrice * item.quantity)}${item.pendingAdjustments?.length ? " + ajuste" : ""}</span>
               </div>
               <p class="cart-item-config">${escapeHtml(itemConfigShort(item))}</p>
               <div class="cart-item-actions">
@@ -1166,10 +1302,10 @@
     refs.subtotalValue.textContent = formatMoney(subtotal);
     if (deliveryType === "delivery") {
       refs.shippingValue.textContent = "Por confirmar";
-      refs.totalValue.textContent = `${formatMoney(subtotal)} + envío`;
+      refs.totalValue.textContent = `${formatMoney(subtotal)}${hasPendingAdjustments ? " + ajustes" : ""} + envío`;
     } else {
       refs.shippingValue.textContent = "No aplica";
-      refs.totalValue.textContent = formatMoney(subtotal);
+      refs.totalValue.textContent = `${formatMoney(subtotal)}${hasPendingAdjustments ? " + ajustes por confirmar" : ""}`;
     }
 
     $$("[data-cart-action]", refs.cartItems).forEach((button) => {
@@ -1209,7 +1345,7 @@
   }
 
   function validateCheckout() {
-    const required = [$("#customerName"), $("#customerPhone")];
+    const required = [$("#customerName"), $("#customerPhone"), $("#paymentMethod")];
     const delivery = $('input[name="delivery"]:checked').value === "delivery";
     if (delivery) required.push($("#deliveryAddress"), $("#deliveryNeighborhood"), $("#deliveryReference"));
     required.forEach((field) => field.classList.remove("invalid"));
@@ -1285,6 +1421,13 @@
           `${index + 1}. *${item.quantity} × ${item.name}*`,
           ...(item.config.choice ? [`   Selección: ${item.config.choice}`] : []),
           ...(item.config.option ? [`   Opción: ${item.config.option}`] : []),
+          ...(item.config.addons?.length
+            ? [
+                `   Ajustes y extras: ${item.config.addons
+                  .map((addon) => `${addon.name}${addon.price == null ? " (precio por confirmar)" : addon.price ? ` (+${formatMoney(addon.price)})` : ""}`)
+                  .join(", ")}`,
+              ]
+            : []),
           `   Notas: ${item.config.notes || "Sin notas"}`,
           `   Precio unitario: ${formatMoney(item.unitPrice)}`,
           `   Importe: ${formatMoney(item.unitPrice * item.quantity)}`,
@@ -1308,6 +1451,9 @@
         `   Notas: ${item.config.notes || "Sin notas"}`,
         `   Precio unitario: ${formatMoney(item.unitPrice)}`,
         `   Importe: ${formatMoney(item.unitPrice * item.quantity)}`,
+        ...(item.pendingAdjustments?.length
+          ? [`   Ajustes por confirmar: ${item.pendingAdjustments.join(", ")}`]
+          : []),
       );
     });
 
@@ -1319,7 +1465,8 @@
       delivery === "delivery"
         ? `Total calculado sin envío: ${formatMoney(subtotal)}`
         : `Total: ${formatMoney(subtotal)}`,
-      "Método de pago: Por confirmar con Nutryfit",
+      `Método de pago preferido: ${$("#paymentMethod").value.trim()}`,
+      `Cambio para efectivo: ${$("#cashAmount").value.trim() || "No indicado"}`,
       `Notas generales: ${$("#generalNotes").value.trim() || "Sin notas"}`,
       "",
       "Favor de confirmar disponibilidad y total final. ¡Gracias!",
@@ -1350,6 +1497,90 @@
     window.requestAnimationFrame(() => {
       $("#pedido").scrollIntoView({ behavior: "smooth", block: "start" });
     });
+  }
+
+  function openPlanOrder(button) {
+    state.selectedPlan = {
+      period: button.dataset.period,
+      schedule: button.dataset.schedule,
+      plan: button.dataset.plan,
+      size: button.dataset.size,
+      includes: button.dataset.includes,
+      price: Number(button.dataset.price),
+    };
+    refs.planOrderSummary.innerHTML = `
+      <span>${escapeHtml(state.selectedPlan.period)} · ${escapeHtml(state.selectedPlan.schedule)}</span>
+      <strong>${escapeHtml(state.selectedPlan.plan)} · ${escapeHtml(state.selectedPlan.size)}</strong>
+      <b>${formatMoney(state.selectedPlan.price)}</b>
+    `;
+    $("#planOrderForm").reset();
+    refs.planDeliveryFields.hidden = true;
+    openDialog(refs.planOrderDialog);
+    refreshIcons();
+  }
+
+  function updatePlanDeliveryMode() {
+    const delivery = $('input[name="planDelivery"]:checked').value === "delivery";
+    refs.planDeliveryFields.hidden = !delivery;
+    [$("#planAddress"), $("#planNeighborhood"), $("#planReference")].forEach((field) => {
+      field.required = delivery;
+    });
+  }
+
+  function sendPlanOrder(event) {
+    event.preventDefault();
+    if (!state.selectedPlan) return;
+    const delivery = $('input[name="planDelivery"]:checked').value;
+    const required = [$("#planCustomerName"), $("#planCustomerPhone"), $("#planPaymentMethod")];
+    if (delivery === "delivery") required.push($("#planAddress"), $("#planNeighborhood"), $("#planReference"));
+    required.forEach((field) => field.classList.remove("invalid"));
+    const invalid = required.find((field) => !field.value.trim());
+    if (invalid) {
+      invalid.classList.add("invalid");
+      invalid.focus();
+      showToast("Completa los campos obligatorios del plan.");
+      return;
+    }
+
+    const plan = state.selectedPlan;
+    const lines = [
+      "🍏 *QUIERO CONTRATAR UN PLAN NUTRYFIT*",
+      "",
+      `*Duración:* ${plan.period}`,
+      `*Días:* ${plan.schedule}`,
+      `*Paquete:* ${plan.plan}`,
+      `*Tamaño:* ${plan.size}`,
+      `*Precio publicado:* ${formatMoney(plan.price)}`,
+      `*Incluye:* ${plan.includes}`,
+      "",
+      "*CLIENTE*",
+      `Nombre: ${$("#planCustomerName").value.trim()}`,
+      `Teléfono: ${$("#planCustomerPhone").value.trim()}`,
+      `Método de pago preferido: ${$("#planPaymentMethod").value.trim()}`,
+      "",
+      "*ENTREGA*",
+      delivery === "pickup" ? `Recoger en: ${data.business.address}` : "Modalidad: Domicilio",
+    ];
+    if (delivery === "delivery") {
+      lines.push(
+        `Calle y número: ${$("#planAddress").value.trim()}`,
+        `Colonia: ${$("#planNeighborhood").value.trim()}`,
+        `Referencia: ${$("#planReference").value.trim()}`,
+        `Ubicación/Maps: ${$("#planLocation").value.trim() || "No proporcionada"}`,
+        "Costo de envío: Por estimar y confirmar en WhatsApp",
+      );
+    }
+    lines.push(
+      "",
+      `Notas: ${$("#planNotes").value.trim() || "Sin notas"}`,
+      "",
+      "Quiero confirmar disponibilidad, fecha de inicio, costo de envío si aplica y total final.",
+    );
+    const message = lines.join("\n");
+    const url = `https://wa.me/${data.business.whatsapp}?text=${encodeURIComponent(message)}`;
+    document.documentElement.dataset.lastPlanWhatsappMessage = message;
+    document.documentElement.dataset.lastPlanWhatsappUrl = url;
+    window.open(url, "_blank", "noopener");
   }
 
   function bindEvents() {
@@ -1404,25 +1635,7 @@
     });
 
     $$(".plan-hire").forEach((button) => {
-      button.addEventListener("click", () => {
-        const price = formatMoney(Number(button.dataset.price));
-        const message = [
-          "🍏 *QUIERO CONTRATAR UN PLAN NUTRYFIT*",
-          "",
-          `*Duración:* ${button.dataset.period}`,
-          `*Días:* ${button.dataset.schedule}`,
-          `*Paquete:* ${button.dataset.plan}`,
-          `*Tamaño:* ${button.dataset.size}`,
-          `*Precio publicado:* ${price}`,
-          `*Incluye:* ${button.dataset.includes}`,
-          "",
-          "Quiero confirmar disponibilidad, fecha de inicio y detalles del plan.",
-        ].join("\n");
-        const url = `https://wa.me/${data.business.whatsapp}?text=${encodeURIComponent(message)}`;
-        document.documentElement.dataset.lastPlanWhatsappMessage = message;
-        document.documentElement.dataset.lastPlanWhatsappUrl = url;
-        window.open(url, "_blank", "noopener");
-      });
+      button.addEventListener("click", () => openPlanOrder(button));
     });
 
     $$(".app-tabs a").forEach((link) => {
@@ -1451,7 +1664,12 @@
     $("#closeCategory").addEventListener("click", closeCategory);
     refs.productSearch.addEventListener("input", (event) => {
       state.search = event.target.value;
-      renderProducts();
+      if (!state.selectedCategory && !state.search.trim()) {
+        refs.categoryEmpty.hidden = false;
+        refs.productsActive.hidden = true;
+      } else {
+        renderProducts();
+      }
     });
 
     $("#closeBuilder").addEventListener("click", () => closeDialog(refs.builderDialog));
@@ -1463,8 +1681,14 @@
     refs.clearCart.addEventListener("click", clearCart);
     refs.sendWhatsapp.addEventListener("click", sendWhatsAppOrder);
     $$('input[name="delivery"]').forEach((radio) => radio.addEventListener("change", updateDeliveryMode));
+    $$('input[name="planDelivery"]').forEach((radio) => radio.addEventListener("change", updatePlanDeliveryMode));
+    $("#planOrderForm").addEventListener("submit", sendPlanOrder);
+    $("[data-close-plan-order]").addEventListener("click", () => closeDialog(refs.planOrderDialog));
+    refs.planOrderDialog.addEventListener("click", (event) => {
+      if (event.target === refs.planOrderDialog) closeDialog(refs.planOrderDialog);
+    });
 
-    [refs.lightbox, refs.productDialog, refs.builderDialog].forEach((dialog) => {
+    [refs.lightbox, refs.productDialog, refs.builderDialog, refs.planOrderDialog].forEach((dialog) => {
       dialog.addEventListener("close", () => {
         if (!$$("dialog[open]").length) document.body.classList.remove("dialog-open");
       });
