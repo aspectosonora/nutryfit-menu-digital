@@ -427,7 +427,7 @@
                     />
                     <span>
                       <strong>${escapeHtml(option.label)}</strong>
-                      <b>${group.selectionOnly ? "Elegir" : option.price == null ? "Por confirmar" : option.price ? `+${formatMoney(option.price)}` : "Incluido"}</b>
+                      <b>${addonPriceLabel(option, group)}</b>
                     </span>
                   </label>
                 `,
@@ -439,12 +439,34 @@
       .join("");
   }
 
+  function addonPriceLabel(option, group) {
+    if (group.selectionOnly) return "Elegir";
+    if (option.pricesByOption) {
+      return Object.entries(option.pricesByOption)
+        .map(([label, price]) => `${escapeHtml(label)} +${formatMoney(price)}`)
+        .join(" · ");
+    }
+    if (option.price == null) return "Por confirmar";
+    return option.price ? `+${formatMoney(option.price)}` : "Incluido";
+  }
+
+  function resolveAddonPrice(option, priceOption) {
+    if (option.pricesByOption && priceOption?.label) {
+      return option.pricesByOption[priceOption.label] ?? option.price ?? 0;
+    }
+    return option.price;
+  }
+
+  function selectedProductImage(product, priceOption, choice) {
+    return priceOption?.image || product.choiceImages?.[choice] || product.image;
+  }
+
   function openProduct(productId) {
     const product = data.products.find((item) => item.id === productId);
     if (!product) return;
     const hasKnownPrice = product.price != null || product.priceOptions?.length;
     refs.productDialogContent.innerHTML = `
-      <img class="product-modal-image" src="${product.image}" alt="${escapeHtml(product.name)}" />
+      <img class="product-modal-image" id="productModalImage" src="${product.image}" alt="${escapeHtml(product.name)}" />
       <div class="product-modal-copy">
         <p class="eyebrow">${
           product.configurable ? "PERSONALIZA TU POKE" : hasKnownPrice ? "PRODUCTO NUTRYFIT" : "PRODUCTO EN REVISIÓN"
@@ -580,7 +602,7 @@
         (product.addonGroups || []).flatMap((group) =>
           $$(`[data-addon-group="${group.id}"]:checked`, refs.productDialogContent).map((input) => {
             const option = group.options[Number(input.value)];
-            return { group: group.label, name: option.label, price: option.price };
+            return { group: group.label, name: option.label, price: resolveAddonPrice(option, selectedOption()) };
           }),
         );
       const unitPrice = () =>
@@ -592,8 +614,20 @@
         $("#simpleProductTotal").textContent = `${formatMoney(unitPrice() * quantity)}${hasPendingAddons() ? " + ajuste por confirmar" : ""}`;
         $("#simpleQtyMinus").disabled = quantity <= 1;
       };
+      const updateProductImage = () => {
+        const image = $("#productModalImage", refs.productDialogContent);
+        if (!image) return;
+        image.src = selectedProductImage(product, selectedOption(), selectedChoice());
+        image.alt = `${product.name}${selectedOption()?.label ? ` · ${selectedOption().label}` : ""}${selectedChoice() ? ` · ${selectedChoice()}` : ""}`;
+      };
       $$('input[name="simplePriceOption"]', refs.productDialogContent).forEach((input) => {
-        input.addEventListener("change", updateSimpleProductTotal);
+        input.addEventListener("change", () => {
+          updateSimpleProductTotal();
+          updateProductImage();
+        });
+      });
+      $$('input[name="simpleProductChoice"]', refs.productDialogContent).forEach((input) => {
+        input.addEventListener("change", updateProductImage);
       });
       $$('[data-addon-group]', refs.productDialogContent).forEach((input) => {
         input.addEventListener("change", updateSimpleProductTotal);
@@ -617,6 +651,7 @@
         );
       });
       updateSimpleProductTotal();
+      updateProductImage();
     } else {
       $("#consultProduct").addEventListener("click", () => consultProduct(product));
     }
@@ -639,7 +674,7 @@
       id: `product-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       productId: product.id,
       name: product.name,
-      image: product.image,
+      image: selectedProductImage(product, option, choice),
       quantity,
       unitPrice: (option?.price ?? product.price) + addons.reduce((sum, addon) => sum + (addon.price || 0), 0),
       pendingAdjustments: addons.filter((addon) => addon.price == null).map((addon) => addon.name),
