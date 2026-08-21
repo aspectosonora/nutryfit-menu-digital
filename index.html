@@ -136,17 +136,16 @@
             </p>
             <div class="nutritionist-actions">
               <span class="consultation-tag">🗒️ Consulta de nutrición</span>
-              <a
+              <button
                 class="button nutritionist-cta"
-                href="https://wa.me/526441541732?text=Hola%20Nutryfit%2C%20quiero%20informaci%C3%B3n%20para%20agendar%20una%20consulta%20de%20nutrici%C3%B3n."
-                target="_blank"
-                rel="noreferrer"
+                id="openBookingCalendar"
+                type="button"
               >
                 <i data-lucide="calendar-heart" aria-hidden="true"></i>
-                Agenda tu consulta
-              </a>
+                Ver horarios y agendar
+              </button>
             </div>
-            <p class="calendar-pending"><i data-lucide="calendar-clock" aria-hidden="true"></i> Consulta horarios y reserva por WhatsApp; la agenda en línea estará disponible próximamente.</p>
+            <p class="calendar-live"><i data-lucide="calendar-check" aria-hidden="true"></i> Consulta los horarios disponibles y reserva directamente en la agenda de Yalvany.</p>
           </div>
         </div>
       </section>
@@ -735,6 +734,41 @@
             <label class="field field-wide"><span>Notas (opcional)</span><textarea id="planNotes" rows="2" placeholder="Ej. fecha en que deseas iniciar"></textarea></label>
             <button class="button button-whatsapp button-full" id="sendPlanWhatsapp" type="submit"><i data-lucide="message-circle" aria-hidden="true"></i> Enviar solicitud por WhatsApp</button>
           </form>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog class="booking-dialog" id="bookingDialog" aria-labelledby="bookingDialogTitle">
+      <div class="booking-shell">
+        <header class="booking-header">
+          <div>
+            <p class="eyebrow">CONSULTA DE NUTRICIÓN</p>
+            <h2 id="bookingDialogTitle">Agenda con Yalvany</h2>
+            <p>Elige un horario disponible y completa tu reservación.</p>
+          </div>
+          <div class="booking-header-actions">
+            <a class="booking-external" id="bookingExternal" href="#" target="_blank" rel="noreferrer">
+              Abrir aparte
+              <i data-lucide="external-link" aria-hidden="true"></i>
+            </a>
+            <button class="modal-close booking-close" type="button" data-close-booking aria-label="Cerrar agenda">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+        </header>
+        <div class="booking-frame-wrap">
+          <div class="booking-loading" aria-hidden="true">
+            <i data-lucide="calendar-days"></i>
+            <span>Cargando horarios disponibles…</span>
+          </div>
+          <iframe
+            class="booking-frame"
+            id="bookingFrame"
+            title="Agenda de consultas de nutrición con Yalvany Espinoza"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+            allow="clipboard-write"
+          ></iframe>
         </div>
       </div>
     </dialog>

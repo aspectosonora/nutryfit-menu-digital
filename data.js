@@ -107,6 +107,7 @@ window.NUTRYFIT_DATA = {
     address: "Av. No Reelección 101, local 3, Col. Centro.",
     hours: "Lunes a sábado, de 7:00 a. m. a 6:00 p. m.",
     timezone: "America/Hermosillo",
+    bookingUrl: "https://calendar.app.google/xQLfoN8ZabRphbv48",
   },
   gallery: [
     { image: "./FOTOS/1.png", alt: "Bowl Nutryfit con aderezo" },

@@ -63,6 +63,9 @@
     planOrderDialog: $("#planOrderDialog"),
     planOrderSummary: $("#planOrderSummary"),
     planDeliveryFields: $("#planDeliveryFields"),
+    bookingDialog: $("#bookingDialog"),
+    bookingFrame: $("#bookingFrame"),
+    bookingExternal: $("#bookingExternal"),
     toast: $("#toast"),
   };
 
@@ -227,6 +230,13 @@
   function closeDialog(dialog) {
     if (dialog.open) dialog.close();
     if (!$$("dialog[open]").length) document.body.classList.remove("dialog-open");
+  }
+
+  function openBookingCalendar() {
+    const bookingUrl = data.business.bookingUrl;
+    refs.bookingExternal.href = bookingUrl;
+    if (!refs.bookingFrame.src) refs.bookingFrame.src = bookingUrl;
+    openDialog(refs.bookingDialog);
   }
 
   function updateOpenStatus() {
@@ -1673,6 +1683,12 @@
       button.addEventListener("click", () => openPlanOrder(button));
     });
 
+    $("#openBookingCalendar").addEventListener("click", openBookingCalendar);
+    $("[data-close-booking]").addEventListener("click", () => closeDialog(refs.bookingDialog));
+    refs.bookingDialog.addEventListener("click", (event) => {
+      if (event.target === refs.bookingDialog) closeDialog(refs.bookingDialog);
+    });
+
     $$(".app-tabs a").forEach((link) => {
       link.addEventListener("click", () => {
         $$(".app-tabs a").forEach((item) => item.classList.remove("active"));
@@ -1723,7 +1739,7 @@
       if (event.target === refs.planOrderDialog) closeDialog(refs.planOrderDialog);
     });
 
-    [refs.lightbox, refs.productDialog, refs.builderDialog, refs.planOrderDialog].forEach((dialog) => {
+    [refs.lightbox, refs.productDialog, refs.builderDialog, refs.planOrderDialog, refs.bookingDialog].forEach((dialog) => {
       dialog.addEventListener("close", () => {
         if (!$$("dialog[open]").length) document.body.classList.remove("dialog-open");
       });
