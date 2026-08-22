@@ -6342,6 +6342,97 @@ main {
   border-top: 2px dashed rgba(5, 83, 59, 0.22);
 }
 
+.builder-followup-extra {
+  margin-top: 22px;
+  padding: 18px 14px 14px;
+  border: 1px solid rgba(5, 83, 59, 0.18);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(133, 170, 75, 0.18), transparent 28%),
+    #f4f5e9;
+}
+
+.builder-stage-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 16px 0 0;
+  padding: 12px 13px;
+  border: 1px dashed rgba(5, 83, 59, 0.25);
+  border-radius: 14px;
+  background: #f7f7ef;
+  color: #53645a;
+  font-size: 0.72rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.builder-stage-note svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  color: #07533b;
+}
+
+.ingredient-quantity-list {
+  display: grid;
+  gap: 9px;
+}
+
+.ingredient-quantity-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 66px;
+  padding: 10px 11px 10px 14px;
+  border: 1px solid #d5ddd3;
+  border-radius: 16px;
+  background: #fff;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.ingredient-quantity-row.selected {
+  border-color: #07533b;
+  background: #e7edd8;
+}
+
+.ingredient-quantity-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ingredient-quantity-copy strong {
+  color: #183c31;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.ingredient-quantity-copy small {
+  color: #69766e;
+  font-size: 0.66rem;
+  font-weight: 650;
+}
+
+.ingredient-quantity-row .qty-control {
+  min-width: 118px;
+  background: #f5f7f0;
+}
+
+.ingredient-quantity-row .qty-control button {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+}
+
+.ingredient-quantity-row .qty-control button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .builder-intro.compact {
   margin-bottom: 12px;
 }

@@ -28,16 +28,28 @@ const NUTRYFIT_COLD_BAR = [
   "Fresa por temporada",
 ];
 
+const NUTRYFIT_DRESSINGS = [
+  "Ranch",
+  "Chipotle",
+  "Mostaza miel",
+  "Cilantro serrano",
+  "Vinagreta balsámica",
+  "Frutos rojos",
+  "Spicy mayo",
+  "Ponzu",
+  "Anguila",
+  "Cacahuate oriental",
+];
+
+const NUTRYFIT_PROTEIN_EXTRAS = [
+  { id: "pollo-extra", name: "Pollo 60 g", price: 30 },
+  { id: "tampico-extra", name: "Tampico 60 g", price: 25 },
+  { id: "atun-extra", name: "Atún 60 g", price: 45 },
+  { id: "camaron-extra", name: "Camarón 60 g", price: 45 },
+  { id: "salmon-extra", name: "Salmón 60 g", price: 45 },
+];
+
 const NUTRYFIT_BOWL_ADDONS = [
-  {
-    id: "portion-adjustments",
-    label: "Ajustes de porción",
-    note: "Nutryfit confirmará el cargo de estos ajustes por WhatsApp.",
-    options: [
-      { id: "double-base", label: "Doble base", price: null },
-      { id: "double-protein", label: "Doble proteína", price: null },
-    ],
-  },
   {
     id: "cold-bar-extras",
     label: "Toppings extra de barra fría",
@@ -46,15 +58,14 @@ const NUTRYFIT_BOWL_ADDONS = [
   },
   {
     id: "bowl-extras",
-    label: "Extras de poke o ensalada",
-    options: [
-      { id: "pollo-extra", label: "Pollo · 60 g", price: 30 },
-      { id: "tampico-extra", label: "Tampico · 60 g", price: 25 },
-      { id: "atun-extra", label: "Atún · 60 g", price: 45 },
-      { id: "camaron-extra", label: "Camarón · 60 g", price: 45 },
-      { id: "salmon-extra", label: "Salmón · 60 g", price: 45 },
-      { id: "aderezo-extra", label: "Aderezo extra", price: 15 },
-    ],
+    label: "Proteína extra",
+    options: NUTRYFIT_PROTEIN_EXTRAS.map(({ id, name, price }) => ({ id, label: name, price })),
+  },
+  {
+    id: "dressing-extras",
+    label: "Aderezo extra",
+    note: "Indica exactamente cuál aderezo adicional deseas.",
+    options: NUTRYFIT_DRESSINGS.map((label) => ({ id: `dressing-${label}`, label, price: 15 })),
   },
 ];
 
@@ -232,7 +243,7 @@ window.NUTRYFIT_DATA = {
       name: "Huevos al gusto",
       description:
         "2 huevos con un ingrediente a elegir. Acompañados de frijol natural y tu elección de 2 tortillas de maíz o 1 pieza de pan integral.",
-      image: "./assets/menu/huevos-al-gusto.webp",
+      image: "./assets/menu/huevos-al-gusto-v2.webp",
       price: 110,
       choiceLabel: "Elige el ingrediente",
       choices: [
@@ -744,26 +755,10 @@ window.NUTRYFIT_DATA = {
       2: { small: 175, medium: 245, large: 330 },
     },
     coldBar: NUTRYFIT_COLD_BAR,
-    dressings: [
-      "Ranch",
-      "Chipotle",
-      "Mostaza miel",
-      "Cilantro serrano",
-      "Vinagreta balsámica",
-      "Frutos rojos",
-      "Spicy mayo",
-      "Ponzu",
-      "Anguila",
-      "Cacahuate oriental",
-    ],
+    dressings: NUTRYFIT_DRESSINGS,
     crunch: ["Crutones", "Tiritas de maíz", "Tiritas de wonton", "Cebolla caramelizada"],
-    extras: [
-      { id: "dressing-extra", name: "Aderezo extra", price: 15 },
-      { id: "pollo-extra", name: "Pollo 60 g", price: 30 },
-      { id: "tampico-extra", name: "Tampico 60 g", price: 25 },
-      { id: "atun-extra", name: "Atún 60 g", price: 45 },
-      { id: "camaron-extra", name: "Camarón 60 g", price: 45 },
-      { id: "salmon-extra", name: "Salmón 60 g", price: 45 },
-    ],
+    proteinExtras: NUTRYFIT_PROTEIN_EXTRAS,
+    coldExtraPrice: 20,
+    dressingExtraPrice: 15,
   },
 };

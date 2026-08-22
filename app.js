@@ -707,15 +707,14 @@
     return {
       step: 1,
       size: null,
-      base: null,
-      doubleBase: false,
-      protein: null,
-      doubleProtein: false,
-      cold: [],
-      extraCold: [],
-      dressings: [],
+      bases: [],
+      proteins: [],
+      cold: {},
+      extraCold: {},
+      dressings: {},
+      extraDressings: {},
       crunch: null,
-      extras: {},
+      proteinExtras: {},
       notes: "",
       quantity: 1,
     };
@@ -731,21 +730,51 @@
     return data.pokeBuilder.sizes.find((size) => size.id === state.builder.size);
   }
 
-  function currentProtein() {
-    return data.pokeBuilder.proteins.find((protein) => protein.id === state.builder.protein);
+  function currentProteins() {
+    return state.builder.proteins
+      .map((id) => data.pokeBuilder.proteins.find((protein) => protein.id === id))
+      .filter(Boolean);
+  }
+
+  function pricedProtein() {
+    return currentProteins().sort((first, second) => second.group - first.group)[0] || null;
+  }
+
+  function quantityTotal(quantities) {
+    return Object.values(quantities).reduce((total, quantity) => total + quantity, 0);
+  }
+
+  function selectedQuantityLabels(quantities) {
+    return Object.entries(quantities)
+      .filter(([, quantity]) => quantity > 0)
+      .map(([label, quantity]) => (quantity > 1 ? `${label} ×${quantity}` : label));
+  }
+
+  function expandedQuantityLabels(quantities) {
+    return Object.entries(quantities).flatMap(([label, quantity]) => Array.from({ length: quantity }, () => label));
+  }
+
+  function splitBaseLabel() {
+    if (state.builder.bases.length === 2) {
+      return `Mitad ${state.builder.bases[0]} / mitad ${state.builder.bases[1]}`;
+    }
+    return state.builder.bases[0] || "";
   }
 
   function builderBasePrice() {
-    const protein = currentProtein();
+    const protein = pricedProtein();
     if (!protein || !state.builder.size) return 0;
     return data.pokeBuilder.prices[protein.group][state.builder.size];
   }
 
   function builderExtrasTotal() {
-    return state.builder.extraCold.length * 20 + data.pokeBuilder.extras.reduce(
-      (sum, extra) => sum + (state.builder.extras[extra.id] || 0) * extra.price,
+    const coldExtras = quantityTotal(state.builder.extraCold) * data.pokeBuilder.coldExtraPrice;
+    const dressingExtras = quantityTotal(state.builder.extraDressings) * data.pokeBuilder.dressingExtraPrice;
+    const proteinExtras = data.pokeBuilder.proteinExtras.reduce(
+      (sum, extra) => sum + (state.builder.proteinExtras[extra.id] || 0) * extra.price,
       0,
     );
+    return coldExtras + dressingExtras + proteinExtras;
   }
 
   function builderUnitPrice() {
@@ -758,8 +787,8 @@
 
   function builderSelectionSummary() {
     const size = currentSize();
-    const protein = currentProtein();
-    const parts = [size?.name, state.builder.base, protein?.name].filter(Boolean);
+    const proteins = currentProteins().map((protein) => protein.name).join(" + ");
+    const parts = [size?.name, splitBaseLabel(), proteins].filter(Boolean);
     return parts.length ? parts.join(" · ") : "Comienza eligiendo un tamaño";
   }
 
@@ -769,6 +798,41 @@
         <input type="${type}" name="${name}" value="${escapeHtml(value)}" ${checked ? "checked" : ""} ${disabled ? "disabled" : ""} />
         <span>${escapeHtml(label)}${detail ? `<small>${escapeHtml(detail)}</small>` : ""}</span>
       </label>
+    `;
+  }
+
+  function quantityOptionRows({ items, quantities, group, priceLabel = "", limit = null }) {
+    const selectedTotal = quantityTotal(quantities);
+    return `
+      <div class="ingredient-quantity-list">
+        ${items
+          .map((item) => {
+            const key = typeof item === "string" ? item : item.id;
+            const label = typeof item === "string" ? item : item.name;
+            const quantity = quantities[key] || 0;
+            const plusDisabled = limit != null && selectedTotal >= limit;
+            const detail =
+              priceLabel || (typeof item === "object" && item.price != null ? `+${formatMoney(item.price)}` : "");
+            return `
+              <div class="ingredient-quantity-row${quantity ? " selected" : ""}">
+                <div class="ingredient-quantity-copy">
+                  <strong>${escapeHtml(label)}</strong>
+                  ${detail ? `<small>${escapeHtml(detail)}</small>` : ""}
+                </div>
+                <div class="qty-control">
+                  <button type="button" data-builder-quantity-group="${group}" data-builder-quantity-action="minus" data-builder-quantity-key="${escapeHtml(key)}" aria-label="Quitar ${escapeHtml(label)}" ${quantity <= 0 ? "disabled" : ""}>
+                    <i data-lucide="minus" aria-hidden="true"></i>
+                  </button>
+                  <span>${quantity}</span>
+                  <button type="button" data-builder-quantity-group="${group}" data-builder-quantity-action="plus" data-builder-quantity-key="${escapeHtml(key)}" aria-label="Agregar ${escapeHtml(label)}" ${plusDisabled ? "disabled" : ""}>
+                    <i data-lucide="plus" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            `;
+          })
+          .join("")}
+      </div>
     `;
   }
 
@@ -827,25 +891,27 @@
   }
 
   function renderBaseStep() {
+    const atLimit = state.builder.bases.length >= 2;
     return `
       <div class="builder-intro">
         <p class="eyebrow">PASO 2</p>
-        <h3>Elige tu base</h3>
-        <p>Selecciona una base. Si deseas doble porción, indícalo aquí mismo.</p>
+        <h3>Elige hasta 2 bases</h3>
+        <p>Selecciona una base completa o combina dos opciones mitad y mitad.</p>
       </div>
-      <label class="builder-inline-extra">
-        <input type="checkbox" id="builderDoubleBase" ${state.builder.doubleBase ? "checked" : ""} />
-        <span><strong>Quiero doble base</strong><small>Cargo por confirmar con Nutryfit</small></span>
-      </label>
+      <div class="selection-counter${atLimit ? " limit" : ""}">
+        <span>${state.builder.bases.length} de 2 bases seleccionadas</span>
+        <span>${state.builder.bases.length === 2 ? "Mitad y mitad" : "Puedes elegir otra"}</span>
+      </div>
       <div class="option-grid">
         ${data.pokeBuilder.bases
           .map((base) =>
             optionCard({
-              type: "radio",
+              type: "checkbox",
               name: "builder-base",
               value: base,
               label: base,
-              checked: state.builder.base === base,
+              checked: state.builder.bases.includes(base),
+              disabled: atLimit && !state.builder.bases.includes(base),
             }),
           )
           .join("")}
@@ -854,37 +920,56 @@
   }
 
   function renderProteinStep() {
-    const size = currentSize();
+    const atLimit = state.builder.proteins.length >= 2;
     return `
       <div class="builder-intro">
         <p class="eyebrow">PASO 3</p>
-        <h3>Elige tu proteína</h3>
-        <p>El precio cambia según proteína y tamaño. Puedes pedir doble proteína en este paso.</p>
+        <h3>Elige hasta 2 proteínas</h3>
+        <p>Puedes combinar dos opciones. El precio se calcula con la proteína de mayor valor.</p>
       </div>
-      <label class="builder-inline-extra">
-        <input type="checkbox" id="builderDoubleProtein" ${state.builder.doubleProtein ? "checked" : ""} />
-        <span><strong>Quiero doble proteína</strong><small>Cargo por confirmar con Nutryfit</small></span>
-      </label>
+      <div class="selection-counter${atLimit ? " limit" : ""}">
+        <span>${state.builder.proteins.length} de 2 proteínas seleccionadas</span>
+        <span>${atLimit ? "Listo" : "Puedes elegir otra"}</span>
+      </div>
       <div class="option-grid">
         ${data.pokeBuilder.proteins
           .map((protein) =>
             optionCard({
-              type: "radio",
+              type: "checkbox",
               name: "builder-protein",
               value: protein.id,
               label: protein.name,
               detail: formatMoney(data.pokeBuilder.prices[protein.group][state.builder.size]),
-              checked: state.builder.protein === protein.id,
+              checked: state.builder.proteins.includes(protein.id),
+              disabled: atLimit && !state.builder.proteins.includes(protein.id),
             }),
           )
           .join("")}
       </div>
+      ${
+        state.builder.proteins.length
+          ? `
+            <div class="builder-followup-extra">
+              <div class="builder-intro compact">
+                <p class="eyebrow">DESPUÉS DE TU SELECCIÓN</p>
+                <h4>¿Quieres proteína extra?</h4>
+                <p>Estas porciones tienen costo adicional y se suman automáticamente.</p>
+              </div>
+              ${quantityOptionRows({
+                items: data.pokeBuilder.proteinExtras,
+                quantities: state.builder.proteinExtras,
+                group: "protein-extra",
+              })}
+            </div>
+          `
+          : ""
+      }
     `;
   }
 
   function renderColdStep() {
     const limit = currentSize().coldLimit;
-    const count = state.builder.cold.length;
+    const count = quantityTotal(state.builder.cold);
     const atLimit = count >= limit;
     return `
       <div class="builder-intro">
@@ -896,46 +981,37 @@
         <span>${count} de ${limit} ingredientes seleccionados</span>
         <span>${atLimit ? "Límite alcanzado" : `${limit - count} disponibles`}</span>
       </div>
-      <div class="option-grid">
-        ${data.pokeBuilder.coldBar
-          .map((ingredient) =>
-            optionCard({
-              type: "checkbox",
-              name: "builder-cold",
-              value: ingredient,
-              label: ingredient,
-              checked: state.builder.cold.includes(ingredient),
-              disabled: atLimit && !state.builder.cold.includes(ingredient),
-            }),
-          )
-          .join("")}
-      </div>
-      <div class="builder-extra-cold">
-        <div class="builder-intro compact">
-          <p class="eyebrow">TOPPINGS EXTRA · +$20 C/U</p>
-          <h4>¿Quieres agregar algo más?</h4>
-          <p>Marca exactamente los ingredientes extra que deseas; aparecerán por nombre en tu pedido.</p>
-        </div>
-        <div class="option-grid">
-          ${data.pokeBuilder.coldBar
-            .map((ingredient) =>
-              optionCard({
-                type: "checkbox",
-                name: "builder-extra-cold",
-                value: ingredient,
-                label: ingredient,
-                detail: "+$20",
-                checked: state.builder.extraCold.includes(ingredient),
-              }),
-            )
-            .join("")}
-        </div>
-      </div>
+      ${quantityOptionRows({
+        items: data.pokeBuilder.coldBar,
+        quantities: state.builder.cold,
+        group: "cold",
+        priceLabel: "Incluido",
+        limit,
+      })}
+      ${
+        atLimit
+          ? `
+            <div class="builder-followup-extra">
+              <div class="builder-intro compact">
+                <p class="eyebrow">PORCIONES ADICIONALES · +${formatMoney(data.pokeBuilder.coldExtraPrice)} C/U</p>
+                <h4>¿Quieres toppings extra?</h4>
+                <p>Elige el ingrediente y la cantidad exacta que deseas agregar.</p>
+              </div>
+              ${quantityOptionRows({
+                items: data.pokeBuilder.coldBar,
+                quantities: state.builder.extraCold,
+                group: "cold-extra",
+                priceLabel: `+${formatMoney(data.pokeBuilder.coldExtraPrice)}`,
+              })}
+            </div>
+          `
+          : `<p class="builder-stage-note"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Los toppings con costo aparecerán después de elegir tus ${limit} porciones incluidas.</p>`
+      }
     `;
   }
 
   function renderDressingStep() {
-    const count = state.builder.dressings.length;
+    const count = quantityTotal(state.builder.dressings);
     const atLimit = count >= 2;
     return `
       <div class="builder-intro">
@@ -947,20 +1023,32 @@
         <span>${count} de 2 aderezos seleccionados</span>
         <span>${atLimit ? "Listo" : `Faltan ${2 - count}`}</span>
       </div>
-      <div class="option-grid">
-        ${data.pokeBuilder.dressings
-          .map((dressing) =>
-            optionCard({
-              type: "checkbox",
-              name: "builder-dressing",
-              value: dressing,
-              label: dressing,
-              checked: state.builder.dressings.includes(dressing),
-              disabled: atLimit && !state.builder.dressings.includes(dressing),
-            }),
-          )
-          .join("")}
-      </div>
+      ${quantityOptionRows({
+        items: data.pokeBuilder.dressings,
+        quantities: state.builder.dressings,
+        group: "dressing",
+        priceLabel: "Incluido",
+        limit: 2,
+      })}
+      ${
+        atLimit
+          ? `
+            <div class="builder-followup-extra">
+              <div class="builder-intro compact">
+                <p class="eyebrow">PORCIONES ADICIONALES · +${formatMoney(data.pokeBuilder.dressingExtraPrice)} C/U</p>
+                <h4>¿Quieres aderezo extra?</h4>
+                <p>Selecciona cuál aderezo deseas y cuántas porciones adicionales necesitas.</p>
+              </div>
+              ${quantityOptionRows({
+                items: data.pokeBuilder.dressings,
+                quantities: state.builder.extraDressings,
+                group: "dressing-extra",
+                priceLabel: `+${formatMoney(data.pokeBuilder.dressingExtraPrice)}`,
+              })}
+            </div>
+          `
+          : `<p class="builder-stage-note"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Los aderezos con costo aparecerán después de elegir tus 2 porciones incluidas.</p>`
+      }
       <p class="builder-pending">Si lo prefieres sin aderezo, indícalo en las notas del siguiente paso.</p>
     `;
   }
@@ -993,30 +1081,8 @@
     return `
       <div class="builder-intro">
         <p class="eyebrow">PASO 7</p>
-        <h3>Extras y notas</h3>
-        <p>Agrega varios extras, cambia sus cantidades y deja instrucciones para tu poke.</p>
-      </div>
-      <div class="extra-list">
-        ${data.pokeBuilder.extras
-          .map((extra) => {
-            const quantity = state.builder.extras[extra.id] || 0;
-            return `
-              <div class="extra-row">
-                <h4>${escapeHtml(extra.name)}</h4>
-                <span>+${formatMoney(extra.price)}</span>
-                <div class="qty-control">
-                  <button type="button" data-extra-action="minus" data-extra="${extra.id}" aria-label="Quitar ${escapeHtml(extra.name)}">
-                    <i data-lucide="minus" aria-hidden="true"></i>
-                  </button>
-                  <span>${quantity}</span>
-                  <button type="button" data-extra-action="plus" data-extra="${extra.id}" aria-label="Agregar ${escapeHtml(extra.name)}">
-                    <i data-lucide="plus" aria-hidden="true"></i>
-                  </button>
-                </div>
-              </div>
-            `;
-          })
-          .join("")}
+        <h3>Notas y cantidad</h3>
+        <p>Los extras ya quedaron junto a cada ingrediente. Solo falta indicar detalles y cantidad.</p>
       </div>
       <label class="builder-field">
         <span>Notas para este poke (opcional)</span>
@@ -1035,28 +1101,26 @@
 
   function renderReviewStep() {
     const size = currentSize();
-    const protein = currentProtein();
-    const extras = data.pokeBuilder.extras
-      .filter((extra) => state.builder.extras[extra.id])
-      .map((extra) => `${extra.name} × ${state.builder.extras[extra.id]}`)
+    const proteins = currentProteins().map((protein) => protein.name).join(" + ");
+    const proteinExtras = data.pokeBuilder.proteinExtras
+      .filter((extra) => state.builder.proteinExtras[extra.id])
+      .map((extra) => `${extra.name} ×${state.builder.proteinExtras[extra.id]}`)
       .join(", ");
-    const pendingAdjustments = [
-      state.builder.doubleBase ? "Doble base" : "",
-      state.builder.doubleProtein ? "Doble proteína" : "",
-    ].filter(Boolean);
+    const cold = selectedQuantityLabels(state.builder.cold).join(", ");
+    const coldExtras = selectedQuantityLabels(state.builder.extraCold).join(", ");
+    const dressings = selectedQuantityLabels(state.builder.dressings).join(", ");
+    const dressingExtras = selectedQuantityLabels(state.builder.extraDressings).join(", ");
     const rows = [
       ["Tamaño", `${size.name} · ${size.grams}`, 1],
-      ["Base", `${state.builder.base}${state.builder.doubleBase ? " · doble base (cargo por confirmar)" : ""}`, 2],
-      ["Proteína", `${protein.name}${state.builder.doubleProtein ? " · doble proteína (cargo por confirmar)" : ""}`, 3],
-      ["Barra fría", state.builder.cold.length ? state.builder.cold.join(", ") : "Sin ingredientes seleccionados", 4],
-      ["Toppings extra", state.builder.extraCold.length ? state.builder.extraCold.join(", ") : "Sin toppings extra", 4],
-      ["Aderezos", state.builder.dressings.join(", "), 5],
+      ["Base", splitBaseLabel(), 2],
+      ["Proteínas", proteins, 3],
+      ["Proteína extra", proteinExtras || "Sin proteína extra", 3],
+      ["Barra fría", cold || "Sin ingredientes seleccionados", 4],
+      ["Toppings extra", coldExtras || "Sin toppings extra", 4],
+      ["Aderezos", dressings, 5],
+      ["Aderezos extra", dressingExtras || "Sin aderezos extra", 5],
       ["Crocante", state.builder.crunch, 6],
-      [
-        "Extras, notas y cantidad",
-        `${extras || "Sin extras"} · ${state.builder.notes || "Sin notas"} · Cantidad ${state.builder.quantity}`,
-        7,
-      ],
+      ["Notas y cantidad", `${state.builder.notes || "Sin notas"} · Cantidad ${state.builder.quantity}`, 7],
     ];
     return `
       <div class="builder-intro">
@@ -1078,7 +1142,7 @@
       </div>
       <div class="review-total">
         <span>${state.builder.quantity} × ${formatMoney(builderUnitPrice())}</span>
-        <strong>${formatMoney(builderTotal())}${pendingAdjustments.length ? " + ajuste por confirmar" : ""}</strong>
+        <strong>${formatMoney(builderTotal())}</strong>
       </div>
     `;
   }
@@ -1090,8 +1154,9 @@
         input.addEventListener("change", () => {
           builder.size = input.value;
           const limit = currentSize().coldLimit;
-          if (builder.cold.length > limit) {
-            builder.cold = builder.cold.slice(0, limit);
+          if (quantityTotal(builder.cold) > limit) {
+            builder.cold = {};
+            builder.extraCold = {};
             showToast(`Ajustamos la barra fría al límite de ${limit} ingredientes.`);
           }
           renderBuilder();
@@ -1101,51 +1166,48 @@
     if (builder.step === 2) {
       $$('input[name="builder-base"]', refs.builderContent).forEach((input) => {
         input.addEventListener("change", () => {
-          builder.base = input.value;
+          if (input.checked) {
+            if (builder.bases.length >= 2) {
+              showToast("Puedes combinar un máximo de 2 bases.");
+              return;
+            }
+            builder.bases.push(input.value);
+          } else {
+            builder.bases = builder.bases.filter((base) => base !== input.value);
+          }
           renderBuilder();
         });
-      });
-      $("#builderDoubleBase")?.addEventListener("change", (event) => {
-        builder.doubleBase = event.target.checked;
-        renderBuilder();
       });
     }
     if (builder.step === 3) {
       $$('input[name="builder-protein"]', refs.builderContent).forEach((input) => {
         input.addEventListener("change", () => {
-          builder.protein = input.value;
+          if (input.checked) {
+            if (builder.proteins.length >= 2) {
+              showToast("Puedes elegir un máximo de 2 proteínas.");
+              return;
+            }
+            builder.proteins.push(input.value);
+          } else {
+            builder.proteins = builder.proteins.filter((protein) => protein !== input.value);
+            if (!builder.proteins.length) builder.proteinExtras = {};
+          }
           renderBuilder();
         });
       });
-      $("#builderDoubleProtein")?.addEventListener("change", (event) => {
-        builder.doubleProtein = event.target.checked;
-        renderBuilder();
-      });
+      bindBuilderQuantityControls("protein-extra", builder.proteinExtras);
     }
     if (builder.step === 4) {
-      $$('input[name="builder-cold"]', refs.builderContent).forEach((input) => {
-        input.addEventListener("change", () => {
-          if (input.checked) builder.cold.push(input.value);
-          else builder.cold = builder.cold.filter((item) => item !== input.value);
-          renderBuilder();
-        });
+      bindBuilderQuantityControls("cold", builder.cold, currentSize().coldLimit, () => {
+        if (quantityTotal(builder.cold) < currentSize().coldLimit) builder.extraCold = {};
       });
-      $$('input[name="builder-extra-cold"]', refs.builderContent).forEach((input) => {
-        input.addEventListener("change", () => {
-          if (input.checked) builder.extraCold.push(input.value);
-          else builder.extraCold = builder.extraCold.filter((item) => item !== input.value);
-          renderBuilder();
-        });
-      });
+      bindBuilderQuantityControls("cold-extra", builder.extraCold);
     }
     if (builder.step === 5) {
-      $$('input[name="builder-dressing"]', refs.builderContent).forEach((input) => {
-        input.addEventListener("change", () => {
-          if (input.checked) builder.dressings.push(input.value);
-          else builder.dressings = builder.dressings.filter((item) => item !== input.value);
-          renderBuilder();
-        });
+      bindBuilderQuantityControls("dressing", builder.dressings, 2, () => {
+        if (quantityTotal(builder.dressings) < 2) builder.extraDressings = {};
       });
+      bindBuilderQuantityControls("dressing-extra", builder.extraDressings);
     }
     if (builder.step === 6) {
       $$('input[name="builder-crunch"]', refs.builderContent).forEach((input) => {
@@ -1156,14 +1218,6 @@
       });
     }
     if (builder.step === 7) {
-      $$("[data-extra-action]", refs.builderContent).forEach((button) => {
-        button.addEventListener("click", () => {
-          const current = builder.extras[button.dataset.extra] || 0;
-          builder.extras[button.dataset.extra] =
-            button.dataset.extraAction === "plus" ? Math.min(current + 1, 9) : Math.max(current - 1, 0);
-          renderBuilder();
-        });
-      });
       $("#builderQtyMinus")?.addEventListener("click", () => {
         builder.quantity = Math.max(1, builder.quantity - 1);
         renderBuilder();
@@ -1186,13 +1240,34 @@
     }
   }
 
+  function bindBuilderQuantityControls(group, quantities, limit = null, afterChange = null) {
+    $$(`[data-builder-quantity-group="${group}"]`, refs.builderContent).forEach((button) => {
+      button.addEventListener("click", () => {
+        const key = button.dataset.builderQuantityKey;
+        const current = quantities[key] || 0;
+        if (button.dataset.builderQuantityAction === "plus") {
+          if (limit != null && quantityTotal(quantities) >= limit) {
+            showToast(`Ya seleccionaste las ${limit} porciones incluidas.`);
+            return;
+          }
+          quantities[key] = Math.min(current + 1, 9);
+        } else {
+          quantities[key] = Math.max(current - 1, 0);
+          if (!quantities[key]) delete quantities[key];
+        }
+        afterChange?.();
+        renderBuilder();
+      });
+    });
+  }
+
   function validateBuilderStep() {
     const builder = state.builder;
     const messages = {
       1: [builder.size, "Elige un tamaño para continuar."],
-      2: [builder.base, "Elige exactamente una base."],
-      3: [builder.protein, "Elige una proteína para calcular el precio."],
-      5: [builder.dressings.length === 2, "Selecciona exactamente 2 aderezos."],
+      2: [builder.bases.length >= 1, "Elige al menos una base."],
+      3: [builder.proteins.length >= 1, "Elige al menos una proteína para calcular el precio."],
+      5: [quantityTotal(builder.dressings) === 2, "Selecciona exactamente 2 porciones de aderezo."],
       6: [builder.crunch, "Elige exactamente 1 crocante."],
     };
     if (!messages[builder.step]) return true;
@@ -1224,21 +1299,28 @@
   function addBuilderToCart() {
     const product = data.products.find((item) => item.id === "custom-poke");
     const size = currentSize();
-    const protein = currentProtein();
-    const extras = data.pokeBuilder.extras
-      .filter((extra) => state.builder.extras[extra.id])
+    const proteins = currentProteins();
+    const extras = data.pokeBuilder.proteinExtras
+      .filter((extra) => state.builder.proteinExtras[extra.id])
       .map((extra) => ({
         name: extra.name,
-        quantity: state.builder.extras[extra.id],
+        quantity: state.builder.proteinExtras[extra.id],
         price: extra.price,
       }));
-    state.builder.extraCold.forEach((ingredient) => {
-      extras.push({ name: `Topping extra: ${ingredient}`, quantity: 1, price: 20 });
+    Object.entries(state.builder.extraCold).forEach(([ingredient, quantity]) => {
+      extras.push({
+        name: `Topping extra: ${ingredient}`,
+        quantity,
+        price: data.pokeBuilder.coldExtraPrice,
+      });
     });
-    const pendingAdjustments = [
-      state.builder.doubleBase ? "Doble base" : "",
-      state.builder.doubleProtein ? "Doble proteína" : "",
-    ].filter(Boolean);
+    Object.entries(state.builder.extraDressings).forEach(([dressing, quantity]) => {
+      extras.push({
+        name: `Aderezo extra: ${dressing}`,
+        quantity,
+        price: data.pokeBuilder.dressingExtraPrice,
+      });
+    });
     const item = {
       id: `poke-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       productId: product.id,
@@ -1246,13 +1328,13 @@
       image: product.image,
       quantity: state.builder.quantity,
       unitPrice: builderUnitPrice(),
-      pendingAdjustments,
+      pendingAdjustments: [],
       config: {
         size: `${size.name} · ${size.grams}`,
-        base: `${state.builder.base}${state.builder.doubleBase ? " · doble base" : ""}`,
-        protein: `${protein.name}${state.builder.doubleProtein ? " · doble proteína" : ""}`,
-        cold: [...state.builder.cold],
-        dressings: [...state.builder.dressings],
+        base: splitBaseLabel(),
+        protein: proteins.map((protein) => protein.name).join(" + "),
+        cold: expandedQuantityLabels(state.builder.cold),
+        dressings: expandedQuantityLabels(state.builder.dressings),
         crunch: state.builder.crunch,
         extras,
         notes: state.builder.notes.trim(),
@@ -1429,6 +1511,14 @@
     }).format(new Date());
   }
 
+  function summarizeRepeatedLabels(labels) {
+    const quantities = labels.reduce((summary, label) => {
+      summary[label] = (summary[label] || 0) + 1;
+      return summary;
+    }, {});
+    return selectedQuantityLabels(quantities).join(", ");
+  }
+
   function generateWhatsAppMessage() {
     const delivery = $('input[name="delivery"]:checked').value;
     const subtotal = cartSubtotal();
@@ -1485,8 +1575,8 @@
         `   Tamaño: ${item.config.size}`,
         `   Base: ${item.config.base}`,
         `   Proteína: ${item.config.protein}`,
-        `   Barra fría: ${item.config.cold.length ? item.config.cold.join(", ") : "Sin ingredientes seleccionados"}`,
-        `   Aderezos: ${item.config.dressings.join(", ")}`,
+        `   Barra fría: ${item.config.cold.length ? summarizeRepeatedLabels(item.config.cold) : "Sin ingredientes seleccionados"}`,
+        `   Aderezos: ${summarizeRepeatedLabels(item.config.dressings)}`,
         `   Crocante: ${item.config.crunch}`,
         `   Extras: ${
           item.config.extras.length
